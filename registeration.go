@@ -14,6 +14,7 @@ import (
 )
 
 var moyu = os.Getenv("MOYU_ID")
+var laosiji = os.Getenv("LOAIJI_ID")
 
 func register(dispatcher *actionDispatcher.ActionDispatcher, massages *mgo.Collection) {
 	// f23
@@ -139,9 +140,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages *mgo.Colle
 				return messages, id, nil
 			}
 		case *linebot.ImageMessage:
-			if originName, thumbnailName, err := getContent(message.ID); err == nil {
-				originURL := contentsPrefix + "/" + originName
-				thumbnailURL := contentsPrefix + "/" + thumbnailName
+			if originURL, thumbnailURL, err := fetchAndUploadContent(message.ID, "imgs"); err == nil {
 				messages = append(messages, linebot.NewImageMessage(originURL, thumbnailURL))
 			} else {
 				log.Println(err)
@@ -158,6 +157,52 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages *mgo.Colle
 		futiActivateAction,
 		futiInactiveAction,
 		futiUsualAction,
+	))
+
+	// mahua gallery
+	galleryActivateAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		messages = append(messages, linebot.NewTextMessage("麻花最萌啦"))
+		context.SetData([]string{})
+		return
+	})
+
+	galleryInactiveAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		messages = append(messages, linebot.NewTextMessage("谢谢爸爸"))
+		messageIDs := context.GetData().([]string)
+		for _, id := range messageIDs {
+			if originURL, thumbnailURL, err := fetchAndUploadContent(id, "mahua"); err == nil {
+				messages = append(messages, linebot.NewTextMessage(id+"\n\n"+originURL+"\n"+thumbnailURL))
+			} else {
+				log.Println(err)
+			}
+		}
+		return
+	})
+
+	galleryUsualAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		messageIDs := context.GetData().([]string)
+		switch message := event.Message.(type) {
+		case *linebot.ImageMessage:
+			messageIDs = append(messageIDs, message.ID)
+		case *linebot.TextMessage:
+			switch message.Text {
+			case "u":
+				if len(messageIDs) == 0 {
+					break
+				}
+				messageIDs = messageIDs[:len(messageIDs)-1]
+			}
+		}
+		messages = append(messages, linebot.NewTextMessage("照照：\n"+strings.Join(messageIDs, "\n")))
+		context.SetData(messageIDs)
+		return
+	})
+
+	dispatcher.RegisterWithID([]string{"mg"}, []string{laosiji}, actionDispatcher.NewContextAction(
+		[]string{"s"},
+		galleryActivateAction,
+		galleryInactiveAction,
+		galleryUsualAction,
 	))
 
 	defaultAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {

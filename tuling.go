@@ -31,6 +31,7 @@ type TulingReq struct {
 }
 
 func forwardToTuling(event linebot.Event, messages []linebot.Message) []linebot.Message {
+	println("tuling")
 	if message, ok := event.Message.(*linebot.TextMessage); ok {
 		hasher := sha1.New()
 		hasher.Write([]byte(event.Source.UserID + event.Source.GroupID + event.Source.RoomID))

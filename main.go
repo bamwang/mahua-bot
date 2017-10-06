@@ -53,6 +53,7 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	initS3()
 }
 
 func main() {
@@ -195,7 +196,7 @@ func sentTo(ids []string, messageText string) {
 	}
 }
 
-func getContent(messageID string) (string, string, error) {
+func fetchAndUploadContent(messageID string, dir string) (string, string, error) {
 	res, err := bot.GetMessageContent(messageID).Do()
 	if err != nil {
 		return "", "", err
@@ -205,7 +206,7 @@ func getContent(messageID string) (string, string, error) {
 	thumbnail := resize.Resize(240, 0, img, resize.Lanczos3)
 
 	// Create the file
-	out, err := os.Create("./contents/" + messageID + ".jpg")
+	out, err := os.Create("/tmp/" + messageID + ".jpg")
 	if err != nil {
 		return "", "", err
 	}
@@ -218,7 +219,7 @@ func getContent(messageID string) (string, string, error) {
 	}
 
 	// Create the file
-	outThumb, err := os.Create("./contents/" + messageID + "_thumbnail.jpg")
+	outThumb, err := os.Create("/tmp/" + messageID + "_thumbnail.jpg")
 	if err != nil {
 		return "", "", err
 	}
@@ -229,6 +230,10 @@ func getContent(messageID string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-
-	return messageID + ".jpg", messageID + "_thumbnail.jpg", nil
+	url, err := upload(messageID+".jpg", "/tmp/", dir, true)
+	if err != nil {
+		return "", "", err
+	}
+	thumbnailURL, err := upload(messageID+"_thumbnail.jpg", "/tmp/", dir, true)
+	return url, thumbnailURL, err
 }
