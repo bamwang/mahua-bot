@@ -9,6 +9,30 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "cgCP+w+hE4Oj7uCgKl3n7VxNrZQ=",
+			"path": "github.com/aws/aws-sdk-go/aws",
+			"revision": "0ee4b9eab69cac09cf503646e7046231c19b518e",
+			"revisionTime": "2017-10-05T21:00:34Z"
+		},
+		{
+			"checksumSHA1": "HcGL4e6Uep4/80eCUI5xkcWjpQ0=",
+			"path": "github.com/aws/aws-sdk-go/aws/session",
+			"revision": "0ee4b9eab69cac09cf503646e7046231c19b518e",
+			"revisionTime": "2017-10-05T21:00:34Z"
+		},
+		{
+			"checksumSHA1": "ncBwU6A58F6w+d3YzuaJNmIy2oY=",
+			"path": "github.com/aws/aws-sdk-go/service",
+			"revision": "0ee4b9eab69cac09cf503646e7046231c19b518e",
+			"revisionTime": "2017-10-05T21:00:34Z"
+		},
+		{
+			"checksumSHA1": "CP0wybfg6u8bYhVZS+nc/Xv9r8U=",
+			"path": "github.com/aws/aws-sdk-go/service/s3/s3manager",
+			"revision": "0ee4b9eab69cac09cf503646e7046231c19b518e",
+			"revisionTime": "2017-10-05T21:00:34Z"
+		},
+		{
 			"checksumSHA1": "BFyfMgaYwgat8llPlmoBTXeUF7c=",
 			"path": "github.com/line/line-bot-sdk-go/linebot",
 			"revision": "c87b736869c5b513726a60407afa5c31d4a94aa4",
