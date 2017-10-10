@@ -13,32 +13,35 @@ import (
 )
 
 var (
-	sess   *session.Session
-	bucket = aws.String(os.Getenv("AWS_BUCKET"))
+	sess            *session.Session
+	bucket          = aws.String(os.Getenv("AWS_BUCKET"))
+	bucketURLPrefix = "https://" + os.Getenv("AWS_BUCKET") + ".s3.amazonaws.com/"
 )
 
 func initS3() {
 	sess = session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
+}
 
+func loadMahua() (mahuas []string) {
 	svc := s3.New(sess)
 	resp, err := svc.ListObjects(&s3.ListObjectsInput{Bucket: bucket})
 
 	if err != nil {
 		log.Printf("Unable to list buckets, %v", err)
 	}
-	mahuas := []string{}
 	for _, item := range resp.Contents {
 		fmt.Println("Name:         ", *item.Key)
 		fmt.Println("Last modified:", *item.LastModified)
 		fmt.Println("Size:         ", *item.Size)
 		fmt.Println("Storage class:", *item.StorageClass)
 		fmt.Println("")
-		if strings.Split(*item.Key, "/")[0] == "mahua" {
-			mahuas = append(mahuas, item.Key)
+		if keys := strings.Split(*item.Key, "/"); len(keys) == 2 && keys[0] == "mahua" && !strings.HasSuffix(keys[1], "_thumbnail.jpg") {
+			mahuas = append(mahuas, *item.Key)
 		}
 	}
+	return mahuas
 }
 
 func upload(filename, localDIR, s3DIR string, tmp bool) (string, error) {

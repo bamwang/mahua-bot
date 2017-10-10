@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -44,6 +45,31 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages *mgo.Colle
 	}
 	dispatcher.RegisterWithType([]string{"msgs"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MsgsHandler))
 
+	// mahua gallery
+	MGHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		mahuas := loadMahua()
+		if len(mahuas) == 0 {
+			return
+		}
+		mahuaOrigin := mahuas[rand.Intn(len(mahuas))]
+		mahuaBase := mahuaOrigin[:len(mahuaOrigin)-4]
+		messages = append(messages, linebot.NewImageMessage(bucketURLPrefix+mahuaOrigin, bucketURLPrefix+mahuaBase+"_thumbnail.jpg"))
+		return
+	}
+	dispatcher.RegisterWithType([]string{"看麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGHandler))
+
+	// mahua gallery
+	MGNHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		mahuas := loadMahua()
+		if len(mahuas) == 0 {
+			return
+		}
+		mahuaOrigin := mahuas[len(mahuas)-1]
+		mahuaBase := mahuaOrigin[:len(mahuaOrigin)-4]
+		messages = append(messages, linebot.NewImageMessage(bucketURLPrefix+mahuaOrigin, bucketURLPrefix+mahuaBase+"_thumbnail.jpg"))
+		return
+	}
+	dispatcher.RegisterWithType([]string{"最新麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGNHandler))
 	// fan
 	fanActivateAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		name := getUserName(event.Source.UserID)
