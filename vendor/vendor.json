@@ -183,6 +183,18 @@
 			"revisionTime": "2017-10-09T19:28:32Z"
 		},
 		{
+			"checksumSHA1": "87LEfpY9cOk9CP7pWyIbmQ/6enU=",
+			"path": "github.com/go-ini/ini",
+			"revision": "c787282c39ac1fc618827141a1f762240def08a3",
+			"revisionTime": "2017-08-13T05:22:30Z"
+		},
+		{
+			"checksumSHA1": "0ZrwvB6KoGPj2PoDNSEJwxQ6Mog=",
+			"path": "github.com/jmespath/go-jmespath",
+			"revision": "bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d",
+			"revisionTime": "2016-08-03T19:07:31Z"
+		},
+		{
 			"checksumSHA1": "BFyfMgaYwgat8llPlmoBTXeUF7c=",
 			"path": "github.com/line/line-bot-sdk-go/linebot",
 			"revision": "c87b736869c5b513726a60407afa5c31d4a94aa4",
