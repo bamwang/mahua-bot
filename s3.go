@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -32,15 +31,11 @@ func loadMahua() (mahuas []string) {
 		log.Printf("Unable to list buckets, %v", err)
 	}
 	for _, item := range resp.Contents {
-		fmt.Println("Name:         ", *item.Key)
-		fmt.Println("Last modified:", *item.LastModified)
-		fmt.Println("Size:         ", *item.Size)
-		fmt.Println("Storage class:", *item.StorageClass)
-		fmt.Println("")
 		if keys := strings.Split(*item.Key, "/"); len(keys) == 2 && keys[0] == "mahua" && !strings.HasSuffix(keys[1], "_thumbnail.jpg") {
 			mahuas = append(mahuas, *item.Key)
 		}
 	}
+	log.Printf("%d mahua pics loaded\n", len(mahuas))
 	return mahuas
 }
 
