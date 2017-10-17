@@ -7,8 +7,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 
 	"strconv"
 
@@ -44,6 +46,13 @@ type SendRequest struct {
 	Text string `json:text`
 }
 
+type publication struct {
+	ID          bson.ObjectId `bson:"_id"`
+	IDs         []string      `bson:"ids"`
+	CreatedAt   time.Time     `bson:"createdAt,omitempty"`
+	PublishedAt time.Time     `bson:"publishedAt,omitempty"`
+}
+
 func init() {
 	var err error
 	bot, err = linebot.New(
@@ -70,8 +79,10 @@ func main() {
 	session.SetMode(mgo.Monotonic, true)
 
 	massages := session.DB("").C("massages")
+	subscribers := session.DB("").C("subscribers")
+	publications := session.DB("").C("publications")
 
-	register(&dispatcher, massages)
+	register(&dispatcher, massages, subscribers, publications)
 
 	fs := http.FileServer(http.Dir("statics"))
 	fsContent := http.FileServer(http.Dir("contents"))
@@ -150,7 +161,21 @@ func main() {
 			return
 		}
 		w.Write([]byte("done"))
-		w.WriteHeader(200)
+	})
+
+	http.HandleFunc("/publish", func(w http.ResponseWriter, req *http.Request) {
+
+		subs := []map[string]string{}
+		subscribers.Find(nil).All(&subs)
+		ids := []string{}
+		for _, subscriber := range subs {
+			ids = append(ids, subscriber["uid"])
+		}
+		publish(w, req, publications, ids, "最新麻花来啦！", true)
+	})
+
+	http.HandleFunc("/publish_test", func(w http.ResponseWriter, req *http.Request) {
+		publish(w, req, publications, []string{laosiji}, "最新麻花群发测试", false)
 	})
 
 	// Setup HTTP Server for receiving requests from LINE platform
@@ -182,6 +207,41 @@ func main() {
 	}
 }
 
+func publish(w http.ResponseWriter, req *http.Request, publications *mgo.Collection, ids []string, message string, updateStatus bool) {
+	log.Println(ids)
+
+	if req.Method != http.MethodPost {
+		w.WriteHeader(405)
+		return
+	}
+
+	pub := publication{}
+	publications.Find(nil).Sort("-_id").One(&pub)
+	messages := []linebot.Message{linebot.NewTextMessage(message)}
+	for _, id := range pub.IDs {
+		messages = append(messages, linebot.NewImageMessage(bucketURLPrefix+"mahua/"+id+".jpg", bucketURLPrefix+"mahua/"+id+"_thumbnail.jpg"))
+	}
+	if pub.PublishedAt.Year() >= 2017 {
+		w.WriteHeader(404)
+		return
+	}
+
+	var err error
+	for _, id := range ids {
+		_, err = bot.PushMessage(id, messages...).Do()
+	}
+	if err == nil {
+		w.WriteHeader(200)
+		if updateStatus {
+			pub.PublishedAt = bson.Now()
+			publications.UpdateId(pub.ID, pub)
+		}
+		return
+	}
+	w.WriteHeader(500)
+	w.Write([]byte(err.Error()))
+}
+
 func getUserName(userID string) string {
 	name := "没加麻花为好友的路人"
 	if resp, err := bot.GetProfile(userID).Do(); err == nil {
@@ -190,7 +250,7 @@ func getUserName(userID string) string {
 	return name
 }
 
-func sentTo(ids []string, messageText string) {
+func sendTo(ids []string, messageText string) {
 	for _, id := range ids {
 		bot.PushMessage(id, linebot.NewTextMessage(messageText)).Do()
 	}

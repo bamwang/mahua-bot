@@ -7,17 +7,20 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 
 	"bitbucket.com/wangzhucn/mahua-bot/action_dispatcher"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
 var moyu = os.Getenv("MOYU_ID")
-var laosiji = os.Getenv("LOAIJI_ID")
+var laosiji = os.Getenv("LAOSIJI_ID")
 
-func register(dispatcher *actionDispatcher.ActionDispatcher, massages *mgo.Collection) {
+func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribers, publications *mgo.Collection) {
+
 	// f23
 	f23MenuHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		donburiCol := linebot.NewCarouselColumn(fmt.Sprintf("%s/don.jpg", staticsPrefix), "Donburi / Curry", "JPY300", linebot.NewURITemplateAction("BUY", "https://webpos.line.me/cafe/payment/c81e728d9d4c2f636f067f89cc14862c/reserve"))
@@ -70,6 +73,58 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages *mgo.Colle
 		return
 	}
 	dispatcher.RegisterWithType([]string{"最新麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGNHandler))
+
+	// mahua gallery subscription
+	MGSHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		name := getUserName(event.Source.UserID)
+		var id string
+		switch event.Source.Type {
+		case linebot.EventSourceTypeUser:
+			id = event.Source.UserID
+		case linebot.EventSourceTypeRoom:
+			id = event.Source.RoomID
+		case linebot.EventSourceTypeGroup:
+			id = event.Source.GroupID
+		}
+		subscribers.Insert(bson.M{
+			"uid":          id,
+			"name":         name, // will not be upadated automatically
+			"type":         event.Source.Type,
+			"subscribedAt": bson.Now(),
+		})
+		messages = append(messages, linebot.NewTextMessage("麻花有新照照的时候都会第一时间通知你哒！"))
+		sendTo([]string{laosiji}, fmt.Sprintf("%s (%v) 订阅了麻花", name, event.Source.Type))
+		return
+	}
+	dispatcher.RegisterWithType([]string{"订阅麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGSHandler))
+
+	// mahua gallery unsubscription
+	MGSCHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		name := getUserName(event.Source.UserID)
+		subscribers.RemoveAll(bson.M{
+			"uid": event.Source.UserID,
+		})
+		messages = append(messages, linebot.NewTextMessage("你不喜欢麻花了吗？呜呜~~"))
+		sendTo([]string{laosiji}, fmt.Sprintf("%s (%v) 退订了麻花", name, event.Source.Type))
+		return
+	}
+	dispatcher.RegisterWithType([]string{"退订麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGSCHandler))
+
+	// mahua gallery unsubscription
+	MGPCHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		pub := publication{}
+		publications.Find(nil).Sort("-_id").One(&pub)
+		if pub.PublishedAt.Year() >= 2017 {
+			messages = append(messages, linebot.NewTextMessage("无群发"))
+			return
+		}
+		pub.PublishedAt = time.Date(2100, 1, 1, 0, 0, 0, 0, time.Local)
+		publications.UpdateId(pub.ID, pub)
+		messages = append(messages, linebot.NewTextMessage("停止群发麻花"))
+		return
+	}
+	dispatcher.RegisterWithID([]string{"cp"}, []string{laosiji}, actionDispatcher.NewReplayAction(MGPCHandler))
+
 	// fan
 	fanActivateAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		name := getUserName(event.Source.UserID)
@@ -111,7 +166,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages *mgo.Colle
 				messages = append(messages, linebot.NewTextMessage(fmt.Sprintf("说好要去吃饭的有%d人：\n", len(userIDs))+strings.Join(names, "\n")))
 			case "g":
 
-				sentTo(userIDs, name+"喊道：走啦走啦！去吃饭啦！")
+				sendTo(userIDs, name+"喊道：走啦走啦！去吃饭啦！")
 				messages = append(messages, linebot.NewTextMessage("走啦走啦：\n"+strings.Join(names, "\n")))
 			}
 		}
@@ -186,41 +241,60 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages *mgo.Colle
 	))
 
 	// mahua gallery
+	type gallery struct {
+		ids           []string
+		shouldPublish bool
+	}
+
 	galleryActivateAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = append(messages, linebot.NewTextMessage("麻花最萌啦"))
-		context.SetData([]string{})
+		context.SetData(gallery{[]string{}, false})
 		return
 	})
 
 	galleryInactiveAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = append(messages, linebot.NewTextMessage("谢谢爸爸"))
-		messageIDs := context.GetData().([]string)
-		for _, id := range messageIDs {
+		galleryObj := context.GetData().(gallery)
+		urls := ""
+		ids := []string{}
+		for _, id := range galleryObj.ids {
 			if originURL, thumbnailURL, err := fetchAndUploadContent(id, "mahua"); err == nil {
-				messages = append(messages, linebot.NewTextMessage(id+"\n\n"+originURL+"\n"+thumbnailURL))
+				urls += fmt.Sprintf("%s\n\n%s\n%s\n", id, originURL, thumbnailURL)
+				ids = append(ids, id)
 			} else {
 				log.Println(err)
 			}
 		}
+		if galleryObj.shouldPublish {
+			publications.Insert(publication{
+				IDs:       ids,
+				CreatedAt: bson.Now(),
+			})
+		}
+		messages = append(messages, linebot.NewTextMessage(urls))
 		return
 	})
 
 	galleryUsualAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
-		messageIDs := context.GetData().([]string)
+		galleryObj := context.GetData().(gallery)
 		switch message := event.Message.(type) {
 		case *linebot.ImageMessage:
-			messageIDs = append(messageIDs, message.ID)
+			galleryObj.ids = append(galleryObj.ids, message.ID)
 		case *linebot.TextMessage:
 			switch message.Text {
 			case "u":
-				if len(messageIDs) == 0 {
+				if len(galleryObj.ids) == 0 {
 					break
 				}
-				messageIDs = messageIDs[:len(messageIDs)-1]
+				galleryObj.ids = galleryObj.ids[:len(galleryObj.ids)-1]
+			case "p":
+				galleryObj.shouldPublish = !galleryObj.shouldPublish
 			}
 		}
-		messages = append(messages, linebot.NewTextMessage("照照：\n"+strings.Join(messageIDs, "\n")))
-		context.SetData(messageIDs)
+		messages = append(messages, linebot.NewTextMessage(
+			fmt.Sprintf("照照：\n%s\n%t", strings.Join(galleryObj.ids, "\n是否发布: "), galleryObj.shouldPublish)),
+		)
+		context.SetData(galleryObj)
 		return
 	})
 
