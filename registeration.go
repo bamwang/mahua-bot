@@ -292,7 +292,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			}
 		}
 		messages = append(messages, linebot.NewTextMessage(
-			fmt.Sprintf("照照：\n%s\n%t", strings.Join(galleryObj.ids, "\n是否发布: "), galleryObj.shouldPublish)),
+			fmt.Sprintf("照照：\n%s\n是否发布: %t", strings.Join(galleryObj.ids, "\n"), galleryObj.shouldPublish)),
 		)
 		context.SetData(galleryObj)
 		return
