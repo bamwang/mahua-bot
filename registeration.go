@@ -86,6 +86,13 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		case linebot.EventSourceTypeGroup:
 			id = event.Source.GroupID
 		}
+		n, _ := subscribers.Find(bson.M{
+			"uid": id,
+		}).Count()
+		if n == 1 {
+			messages = append(messages, linebot.NewTextMessage("已经在这订阅过麻花啦！"))
+			return
+		}
 		subscribers.Insert(bson.M{
 			"uid":          id,
 			"name":         name, // will not be upadated automatically
@@ -101,8 +108,24 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	// mahua gallery unsubscription
 	MGSCHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		name := getUserName(event.Source.UserID)
+		var id string
+		switch event.Source.Type {
+		case linebot.EventSourceTypeUser:
+			id = event.Source.UserID
+		case linebot.EventSourceTypeRoom:
+			id = event.Source.RoomID
+		case linebot.EventSourceTypeGroup:
+			id = event.Source.GroupID
+		}
+		n, _ := subscribers.Find(bson.M{
+			"uid": id,
+		}).Count()
+		if n == 0 {
+			messages = append(messages, linebot.NewTextMessage("哼！你本来就没订阅麻花"))
+			return
+		}
 		subscribers.RemoveAll(bson.M{
-			"uid": event.Source.UserID,
+			"uid": id,
 		})
 		messages = append(messages, linebot.NewTextMessage("你不喜欢麻花了吗？呜呜~~"))
 		sendTo([]string{laosiji}, fmt.Sprintf("%s (%v) 退订了麻花", name, event.Source.Type))
@@ -292,7 +315,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			}
 		}
 		messages = append(messages, linebot.NewTextMessage(
-			fmt.Sprintf("照照：\n%s\n是否发布: %t", strings.Join(galleryObj.ids, "\n"), galleryObj.shouldPublish)),
+			fmt.Sprintf("照照：\n%s\n	是否发布: %t", strings.Join(galleryObj.ids, "\n"), galleryObj.shouldPublish)),
 		)
 		context.SetData(galleryObj)
 		return

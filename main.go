@@ -47,7 +47,7 @@ type SendRequest struct {
 }
 
 type publication struct {
-	ID          bson.ObjectId `bson:"_id"`
+	ID          bson.ObjectId `bson:"_id,omitempty"`
 	IDs         []string      `bson:"ids"`
 	CreatedAt   time.Time     `bson:"createdAt,omitempty"`
 	PublishedAt time.Time     `bson:"publishedAt,omitempty"`
