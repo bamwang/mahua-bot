@@ -54,6 +54,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		if len(mahuas) == 0 {
 			return
 		}
+		rand.Seed(time.Now().UnixNano())
 		mahuaOrigin := mahuas[rand.Intn(len(mahuas))]
 		mahuaBase := mahuaOrigin[:len(mahuaOrigin)-4]
 		messages = append(messages, linebot.NewImageMessage(bucketURLPrefix+mahuaOrigin, bucketURLPrefix+mahuaBase+"_thumbnail.jpg"))
