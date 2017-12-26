@@ -12,7 +12,7 @@ import (
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
-	"bitbucket.com/wangzhucn/mahua-bot/action_dispatcher"
+	"github.com/bamwang/mahua-bot/action_dispatcher"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 

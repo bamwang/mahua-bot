@@ -14,7 +14,7 @@ import (
 
 	"strconv"
 
-	"bitbucket.com/wangzhucn/mahua-bot/action_dispatcher"
+	"github.com/bamwang/mahua-bot/action_dispatcher"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/nfnt/resize"
@@ -190,9 +190,9 @@ func main() {
 			return
 		}
 		for _, event := range events {
-			b, _ := event.MarshalJSON()
+			b, _ := json.Marshal(event)
 			log.Println("REQ: " + string(b))
-			dispatcher.Dispatch(*event)
+			dispatcher.Dispatch(&event)
 		}
 	})
 
