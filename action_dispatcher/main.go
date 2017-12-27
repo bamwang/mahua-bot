@@ -9,11 +9,11 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
-type ReplyActionHandler func(event linebot.Event, context *Context) ([]linebot.Message, error)
-type PushActionHandler func(event linebot.Event, context *Context) ([]linebot.Message, string, error)
+type ReplyActionHandler func(event *linebot.Event, context *Context) ([]linebot.Message, error)
+type PushActionHandler func(event *linebot.Event, context *Context) ([]linebot.Message, string, error)
 
 type Action interface {
-	do(event linebot.Event, client *linebot.Client, context *Context) (bool, *Context, error)
+	do(event *linebot.Event, client *linebot.Client, context *Context) (bool, *Context, error)
 }
 
 type ReplyAction struct {
@@ -46,7 +46,7 @@ func New(client *linebot.Client) (actionDispatcher ActionDispatcher) {
 	return
 }
 
-func (d *ActionDispatcher) Dispatch(event linebot.Event) {
+func (d *ActionDispatcher) Dispatch(event *linebot.Event) {
 	if event.Type != linebot.EventTypeMessage {
 		return
 	}
@@ -178,7 +178,7 @@ func (d *ActionDispatcher) RegisterDefaultAction(action Action) {
 	fmt.Println(d.keywordIDsMap)
 }
 
-func (a PushAction) do(event linebot.Event, client *linebot.Client, context *Context) (bool, *Context, error) {
+func (a PushAction) do(event *linebot.Event, client *linebot.Client, context *Context) (bool, *Context, error) {
 	pushMessages, id, err := a.actionHandler(event, context)
 	if err != nil {
 		return false, context, err
@@ -194,7 +194,7 @@ func (a PushAction) do(event linebot.Event, client *linebot.Client, context *Con
 	return true, context, err
 }
 
-func (a ReplyAction) do(event linebot.Event, client *linebot.Client, context *Context) (bool, *Context, error) {
+func (a ReplyAction) do(event *linebot.Event, client *linebot.Client, context *Context) (bool, *Context, error) {
 	messages, err := a.actionHandler(event, context)
 	if err != nil {
 		return false, context, err
@@ -210,7 +210,7 @@ func (a ReplyAction) do(event linebot.Event, client *linebot.Client, context *Co
 	return true, context, err
 }
 
-func (a ContextAction) do(event linebot.Event, client *linebot.Client, _ *Context) (bool, *Context, error) {
+func (a ContextAction) do(event *linebot.Event, client *linebot.Client, _ *Context) (bool, *Context, error) {
 	if a.rule == nil {
 		err := errors.New("NO_INACTIVE_WORDS")
 		return false, nil, err

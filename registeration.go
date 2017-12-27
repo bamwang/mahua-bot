@@ -22,7 +22,7 @@ var laosiji = os.Getenv("LAOSIJI_ID")
 func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribers, publications *mgo.Collection) {
 
 	// f23
-	f23MenuHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	f23MenuHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		donburiCol := linebot.NewCarouselColumn(fmt.Sprintf("%s/don.jpg", staticsPrefix), "Donburi / Curry", "JPY300", linebot.NewURITemplateAction("BUY", "https://webpos.line.me/cafe/payment/c81e728d9d4c2f636f067f89cc14862c/reserve"))
 		saladCol := linebot.NewCarouselColumn(fmt.Sprintf("%s/salad.jpg", staticsPrefix), "Salad", "JPY100", linebot.NewURITemplateAction("BUY", "https://webpos.line.me/cafe/payment/a87ff679a2f3e71d9181a67b7542122c/reserve"))
 		bentoCol := linebot.NewCarouselColumn(fmt.Sprintf("%s/bento.jpg", staticsPrefix), "Bento", "JPY500", linebot.NewURITemplateAction("BUY", "https://webpos.line.me/cafe/payment/c4ca4238a0b923820dcc509a6f75849b/reserve"))
@@ -33,7 +33,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithType([]string{"23b"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(f23MenuHandler))
 
 	// msg
-	MsgHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	MsgHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		message := createMassageMessage(event.Source.GroupID+event.Source.RoomID, massages)
 		messages = append(messages, message)
 		return
@@ -41,7 +41,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithType([]string{"msg"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MsgHandler))
 
 	// msgs
-	MsgsHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	MsgsHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		message := createMassageInfo(massages)
 		messages = append(messages, message)
 		return
@@ -49,7 +49,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithType([]string{"msgs"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MsgsHandler))
 
 	// mahua gallery
-	MGHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	MGHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		mahuas := loadMahua()
 		if len(mahuas) == 0 {
 			return
@@ -63,7 +63,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithType([]string{"看麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGHandler))
 
 	// mahua gallery
-	MGNHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	MGNHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		mahuas := loadMahua()
 		if len(mahuas) == 0 {
 			return
@@ -76,7 +76,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithType([]string{"最新麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGNHandler))
 
 	// mahua gallery subscription
-	MGSHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	MGSHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		name := getUserName(event.Source.UserID)
 		var id string
 		switch event.Source.Type {
@@ -107,7 +107,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithType([]string{"订阅麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGSHandler))
 
 	// mahua gallery unsubscription
-	MGSCHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	MGSCHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		name := getUserName(event.Source.UserID)
 		var id string
 		switch event.Source.Type {
@@ -135,7 +135,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithType([]string{"退订麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGSCHandler))
 
 	// mahua gallery unsubscription
-	MGPCHandler := func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	MGPCHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		pub := publication{}
 		publications.Find(nil).Sort("-_id").One(&pub)
 		if pub.PublishedAt.Year() >= 2017 {
@@ -150,7 +150,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithID([]string{"cp"}, []string{laosiji}, actionDispatcher.NewReplayAction(MGPCHandler))
 
 	// fan
-	fanActivateAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	fanActivateAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		name := getUserName(event.Source.UserID)
 
 		userMap := map[string]string{
@@ -161,12 +161,12 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		return
 	})
 
-	fanInactiveAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	fanInactiveAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = append(messages, linebot.NewTextMessage("麻花也去觅食啦！喵~~"))
 		return
 	})
 
-	fanUsualAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	fanUsualAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		userMap := context.GetData().(map[string]string)
 		context.SetData(userMap)
 		names := []string{}
@@ -205,17 +205,17 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	))
 
 	// mahua
-	mahuaActivateAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	mahuaActivateAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = append(messages, linebot.NewTextMessage("喵~~"))
 		return
 	})
 
-	mahuaInactiveAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	mahuaInactiveAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = append(messages, linebot.NewTextMessage("汪~~"))
 		return
 	})
 
-	mahuaUsualAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	mahuaUsualAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = forwardToTuling(event, messages)
 		return
 	})
@@ -228,17 +228,17 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	))
 
 	// futi
-	futiActivateAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	futiActivateAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = append(messages, linebot.NewTextMessage("麻花为你代言"))
 		return
 	})
 
-	futiInactiveAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	futiInactiveAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = append(messages, linebot.NewTextMessage("麻花还是麻花"))
 		return
 	})
 
-	futiUsualAction := actionDispatcher.NewPushAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, id string, err error) {
+	futiUsualAction := actionDispatcher.NewPushAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, id string, err error) {
 		switch message := event.Message.(type) {
 		case *linebot.StickerMessage:
 			if i, err := strconv.Atoi(message.PackageID); err != nil || i > 4 {
@@ -270,13 +270,13 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		shouldPublish bool
 	}
 
-	galleryActivateAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	galleryActivateAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = append(messages, linebot.NewTextMessage("麻花最萌啦"))
 		context.SetData(gallery{[]string{}, false})
 		return
 	})
 
-	galleryInactiveAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	galleryInactiveAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = append(messages, linebot.NewTextMessage("谢谢爸爸"))
 		galleryObj := context.GetData().(gallery)
 		urls := ""
@@ -299,7 +299,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		return
 	})
 
-	galleryUsualAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	galleryUsualAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		galleryObj := context.GetData().(gallery)
 		switch message := event.Message.(type) {
 		case *linebot.ImageMessage:
@@ -329,7 +329,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		galleryUsualAction,
 	))
 
-	defaultAction := actionDispatcher.NewReplayAction(func(event linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	defaultAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		switch event.Source.Type {
 		case linebot.EventSourceTypeUser:
 			messages = forwardToTuling(event, messages)

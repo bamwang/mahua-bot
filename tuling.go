@@ -30,7 +30,7 @@ type TulingReq struct {
 	UserID string `json:"userid"`
 }
 
-func forwardToTuling(event linebot.Event, messages []linebot.Message) []linebot.Message {
+func forwardToTuling(event *linebot.Event, messages []linebot.Message) []linebot.Message {
 	println("tuling")
 	if message, ok := event.Message.(*linebot.TextMessage); ok {
 		hasher := sha1.New()
