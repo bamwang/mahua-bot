@@ -68,19 +68,21 @@ func init() {
 }
 
 func main() {
+	log.Println("start")
 	url := os.Getenv("MONGODB_URI")
 	tlsConfig := &tls.Config{}
 	info, err := mgo.ParseURL(url)
 	if err != nil {
-		panic(err)
+		log.Panicln(err)
 	}
+	info.Timeout = time.Second * 10
 	info.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 		conn, err := tls.Dial("tcp", addr.String(), tlsConfig)
 		return conn, err
 	}
 	session, err := mgo.DialWithInfo(info)
 	if err != nil {
-		panic(err)
+		log.Panicln(err)
 	}
 	defer session.Close()
 

@@ -3,4 +3,5 @@ vendor/*/
 contents/*
 !contents/.keep
 .git.pvt
-env
+env.rc
+mahua-bot
