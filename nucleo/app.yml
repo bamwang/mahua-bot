@@ -2,4 +2,4 @@ platform: golang
 ports:
   - 8080:80
 cmd:
-  start: "go run main s3 msg tuling"
+  start: "./start.sh"
