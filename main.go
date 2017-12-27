@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"image"
 	"image/jpeg"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -67,6 +69,16 @@ func init() {
 
 func main() {
 	url := os.Getenv("MONGODB_URI")
+	tlsConfig := &tls.Config{}
+
+	info, err := mgo.ParseURL(url)
+	if err != nil {
+		panic(err)
+	}
+	info.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		conn, err := tls.Dial("tcp", addr.String(), tlsConfig)
+		return conn, err
+	}
 	session, err := mgo.Dial(url)
 	if err != nil {
 		panic(err)
