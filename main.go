@@ -70,7 +70,6 @@ func init() {
 func main() {
 	url := os.Getenv("MONGODB_URI")
 	tlsConfig := &tls.Config{}
-
 	info, err := mgo.ParseURL(url)
 	if err != nil {
 		panic(err)
@@ -79,7 +78,7 @@ func main() {
 		conn, err := tls.Dial("tcp", addr.String(), tlsConfig)
 		return conn, err
 	}
-	session, err := mgo.Dial(url)
+	session, err := mgo.DialWithInfo(info)
 	if err != nil {
 		panic(err)
 	}
