@@ -1,4 +1,4 @@
-package: .
+package: github.com/bamwang/mahua-bot
 import:
 # - package: github.com/bamwang/mahua-bot/action_dispatcher
 - package: github.com/aws/aws-sdk-go
