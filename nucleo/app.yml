@@ -2,4 +2,4 @@ platform: golang
 ports:
   - 8080:80
 cmd:
-  start: "./start.sh"
+  start: "nucleo/start.sh"
