@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	apiURL = "https://eth.nanopool.org/api/v1/load_account/"
+	apiURL = "https://eth.nanopool.org/api/v1/load_account"
 )
 
 type HashData struct {
@@ -48,7 +48,8 @@ func getMiningStatus(event *linebot.Event, messages []linebot.Message, address, 
 }
 
 func do(address, dig string) (rep string) {
-	resp, err := http.Get(fmt.Sprintf("%s/%s/%s", apiURL, address, dig))
+	url := fmt.Sprintf("%s/%s/%s", apiURL, address, dig)
+	resp, err := http.Get(url)
 	if err != nil {
 		log.Print(err)
 	}
@@ -57,6 +58,8 @@ func do(address, dig string) (rep string) {
 		log.Print(err)
 	}
 	var respStruct HashRes
+	log.Println(url)
+	log.Println(string(resBody))
 	if err := json.Unmarshal(resBody, &respStruct); err != nil {
 		log.Print(err)
 	}
