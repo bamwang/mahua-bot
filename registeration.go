@@ -18,6 +18,7 @@ import (
 
 var moyu = os.Getenv("MOYU_ID")
 var laosiji = os.Getenv("LAOSIJI_ID")
+var address = os.Getenv("LAOSIJI_ADD")
 
 func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribers, publications *mgo.Collection) {
 
@@ -327,6 +328,13 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		galleryActivateAction,
 		galleryInactiveAction,
 		galleryUsualAction,
+	))
+
+	dispatcher.RegisterWithID([]string{"hash"}, []string{laosiji}, actionDispatcher.NewReplayAction(
+		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+			messages = getMiningStatus(event, messages, address, "")
+			return messages, err
+		},
 	))
 
 	defaultAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
