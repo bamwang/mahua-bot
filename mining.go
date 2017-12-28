@@ -35,7 +35,7 @@ type AvgHashRate struct {
 }
 
 type HashRes struct {
-	Status string   `json:"status"`
+	Status bool     `json:"status"`
 	Data   HashData `json:"data"`
 }
 
