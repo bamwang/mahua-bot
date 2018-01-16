@@ -93,10 +93,11 @@ func (d *ActionDispatcher) Dispatch(event *linebot.Event) {
 		}
 		if has && (typeMatched && idMatched) {
 			var c *Context
-			if replied, c, err = action.do(event, d.client, nil); c != nil {
-				if err != nil {
-					log.Println(err)
-				}
+			replied, c, err = action.do(event, d.client, nil)
+			if err != nil {
+				log.Println(err)
+			}
+			if c != nil {
 				d.contextGroup.Put(event.Source, c)
 			}
 		}

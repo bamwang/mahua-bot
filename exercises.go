@@ -15,7 +15,7 @@ type meta struct {
 }
 
 type exercises struct {
-	ID        bson.ObjectId `bson:"_id"`
+	ID        bson.ObjectId `bson:"_id,omitempty"`
 	UserID    string        `bson:"userID"`
 	CreatedAt time.Time     `bson:"createdAt"`
 	IsDeleted bool          `bson:"_isDeleted"`
@@ -58,6 +58,14 @@ func (e *exercisesManager) add(userID string) (message string, err error) {
 		message = "请先发送jsj加入下班后不划水健身俱乐部\n一旦加入就不能退会哦"
 		return
 	}
+	if count, _err := e.exercises.Find(bson.M{"userID": userID, "_isDeleted": false, "createdAt": bson.M{"$gte": bod(time.Now())}}).Count(); count > 0 {
+		if _err != nil {
+			err = _err
+			return
+		}
+		message = "一天只能打卡一次哦"
+		return
+	}
 	err = e.exercises.Insert(exercises{bson.NewObjectId(), userID, time.Now(), false})
 	if err != nil {
 		return
@@ -85,11 +93,10 @@ func (e *exercisesManager) remove(userID string) (message string, err error) {
 		"_isDeleted": false,
 		"createdAt":  bson.M{"$gte": bod(time.Now())},
 	}).One(&ex)
-	if err != nil {
-		return
+	if err == mgo.ErrNotFound {
+		return "你没说你要健身来着", nil
 	}
-	if ex.ID == "" {
-		message = "嗯哼"
+	if err != nil {
 		return
 	}
 	ex.IsDeleted = true
@@ -140,7 +147,7 @@ func (e *exercisesManager) check(flag, prefix string) (message string, err error
 	}
 	message += prefix + "\n"
 	if len(exs) == 0 {
-		message = "还木有人健身"
+		message += "还木有人健身"
 		return
 	}
 	rankMap := map[string]int{}
