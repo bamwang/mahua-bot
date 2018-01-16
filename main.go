@@ -94,8 +94,10 @@ func main() {
 	massages := session.DB("").C("massages")
 	subscribers := session.DB("").C("subscribers")
 	publications := session.DB("").C("publications")
+	exercises := session.DB("").C("exercises")
+	exercisesMeta := session.DB("").C("exercisesMeta")
 
-	register(&dispatcher, massages, subscribers, publications)
+	register(&dispatcher, massages, subscribers, publications, exercises, exercisesMeta)
 
 	fs := http.FileServer(http.Dir("statics"))
 	fsContent := http.FileServer(http.Dir("contents"))

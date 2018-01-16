@@ -20,7 +20,7 @@ var moyu = os.Getenv("MOYU_ID")
 var laosiji = os.Getenv("LAOSIJI_ID")
 var address = os.Getenv("LAOSIJI_ADD")
 
-func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribers, publications *mgo.Collection) {
+func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribers, publications, exercises, exercisesMeta *mgo.Collection) {
 
 	// f23
 	f23MenuHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
@@ -333,6 +333,48 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithID([]string{"hash"}, []string{laosiji}, actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			messages = getMiningStatus(event, messages, address, "")
+			return messages, err
+		},
+	))
+
+	em := exercisesManager{exercisesMeta, exercises}
+
+	dispatcher.RegisterWithID([]string{"js+"}, []string{moyu}, actionDispatcher.NewReplayAction(
+		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+			message, err := em.add(event.Source.UserID)
+			messages = append(messages, linebot.NewTextMessage(message))
+			return messages, err
+		},
+	))
+
+	dispatcher.RegisterWithID([]string{"js-"}, []string{moyu}, actionDispatcher.NewReplayAction(
+		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+			message, err := em.remove(event.Source.UserID)
+			messages = append(messages, linebot.NewTextMessage(message))
+			return messages, err
+		},
+	))
+
+	dispatcher.RegisterWithID([]string{"jsc"}, []string{moyu}, actionDispatcher.NewReplayAction(
+		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+			message, err := em.check("", "")
+			messages = append(messages, linebot.NewTextMessage(message))
+			return messages, err
+		},
+	))
+
+	dispatcher.RegisterWithID([]string{"jsc.m"}, []string{moyu}, actionDispatcher.NewReplayAction(
+		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+			message, err := em.check("m", "")
+			messages = append(messages, linebot.NewTextMessage(message))
+			return messages, err
+		},
+	))
+
+	dispatcher.RegisterWithID([]string{"jsj"}, []string{moyu}, actionDispatcher.NewReplayAction(
+		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+			message, err := em.join(event.Source.UserID)
+			messages = append(messages, linebot.NewTextMessage(message))
 			return messages, err
 		},
 	))
