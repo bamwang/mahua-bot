@@ -27,6 +27,14 @@ type exercisesManager struct {
 }
 
 func (e *exercisesManager) join(userID string) (message string, err error) {
+	has, err := e.has(userID)
+	if err != nil {
+		return
+	}
+	if has {
+		message = "你已经加入了！"
+		return
+	}
 	return "欢迎加入下班不划水健身俱乐部！", e.exercisesMeta.Insert(meta{userID, time.Now()})
 }
 
@@ -137,7 +145,7 @@ func (e *exercisesManager) check(flag, prefix string) (message string, err error
 	}
 	rankMap := map[string]int{}
 	for _, ex := range exs {
-		message += ex.CreatedAt.Format("2006-01-02  ") + getUserName(ex.UserID)
+		message += ex.CreatedAt.Format("2006-01-02  ") + getUserName(ex.UserID) + "\n"
 		rankMap[ex.UserID]++
 	}
 
@@ -147,9 +155,9 @@ func (e *exercisesManager) check(flag, prefix string) (message string, err error
 		rank = append(rank, e)
 	}
 	sort.Sort(rank)
-	message += "==========="
+	message += "===========\n"
 	for _, ent := range rank {
-		message += fmt.Sprintf("%s : %d", getUserName(ent.userID), ent.count)
+		message += fmt.Sprintf("%s : %d", getUserName(ent.userID), ent.count) + "\n"
 	}
 	return
 }
