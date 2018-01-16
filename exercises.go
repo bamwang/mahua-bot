@@ -10,15 +10,15 @@ import (
 )
 
 type meta struct {
-	userID    string    `bson:"userID,omitempty"`
-	createdAt time.Time `bson:"createdAt,omitempty"`
+	UserID    string    `bson:"userID"`
+	CreatedAt time.Time `bson:"createdAt"`
 }
 
 type exercises struct {
-	ID         bson.ObjectId `bson:"_id,omitempty"`
-	userID     string        `bson:"userID,omitempty"`
-	createdAt  time.Time     `bson:"createdAt,omitempty"`
-	_isDeleted bool          `bson:"_isDeleted,omitempty"`
+	ID        bson.ObjectId `bson:"_id"`
+	UserID    string        `bson:"userID"`
+	CreatedAt time.Time     `bson:"createdAt"`
+	IsDeleted bool          `bson:"_isDeleted"`
 }
 
 type exercisesManager struct {
@@ -84,7 +84,7 @@ func (e *exercisesManager) remove(userID string) (message string, err error) {
 		message = "嗯哼"
 		return
 	}
-	ex._isDeleted = true
+	ex.IsDeleted = true
 	err = e.exercises.UpdateId(ex.ID, ex)
 	if err != nil {
 		return
@@ -137,8 +137,8 @@ func (e *exercisesManager) check(flag, prefix string) (message string, err error
 	}
 	rankMap := map[string]int{}
 	for _, ex := range exs {
-		message += ex.createdAt.Format("2006-01-02  ") + getUserName(ex.userID)
-		rankMap[ex.userID]++
+		message += ex.CreatedAt.Format("2006-01-02  ") + getUserName(ex.UserID)
+		rankMap[ex.UserID]++
 	}
 
 	rank := List{}
