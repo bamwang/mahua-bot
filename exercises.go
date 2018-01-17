@@ -5,6 +5,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/jinzhu/now"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -58,7 +59,7 @@ func (e *exercisesManager) add(userID string) (message string, err error) {
 		message = "请先发送jsj加入下班后不划水健身俱乐部\n一旦加入就不能退会哦"
 		return
 	}
-	if count, _err := e.exercises.Find(bson.M{"userID": userID, "_isDeleted": false, "createdAt": bson.M{"$gte": bod(time.Now())}}).Count(); count > 0 {
+	if count, _err := e.exercises.Find(bson.M{"userID": userID, "_isDeleted": false, "createdAt": bson.M{"$gte": now.BeginningOfDay()}}).Count(); count > 0 {
 		if _err != nil {
 			err = _err
 			return
@@ -71,11 +72,6 @@ func (e *exercisesManager) add(userID string) (message string, err error) {
 		return
 	}
 	return e.check("", "")
-}
-
-func bod(t time.Time) time.Time {
-	year, month, day := t.Date()
-	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
 }
 
 func (e *exercisesManager) remove(userID string) (message string, err error) {
@@ -91,7 +87,7 @@ func (e *exercisesManager) remove(userID string) (message string, err error) {
 	err = e.exercises.Find(bson.M{
 		"userID":     userID,
 		"_isDeleted": false,
-		"createdAt":  bson.M{"$gte": bod(time.Now())},
+		"createdAt":  bson.M{"$gte": now.BeginningOfDay()},
 	}).One(&ex)
 	if err == mgo.ErrNotFound {
 		return "你没说你要健身来着", nil
@@ -122,19 +118,22 @@ func (l List) Swap(i, j int) {
 }
 
 func (l List) Less(i, j int) bool {
-	return (l[i].count < l[j].count)
+	return (l[i].count > l[j].count)
 }
 
 func (e *exercisesManager) check(flag, prefix string) (message string, err error) {
-	year, month, _ := time.Now().Date()
 	var start time.Time
+	var title string
 	switch flag {
 	case "w":
-		fallthrough
+		title = "本周统计"
+		start = now.BeginningOfWeek()
 	case "m":
-		start = time.Date(year, month, 0, 0, 0, 0, 0, time.Now().Location())
+		title = "本月统计"
+		start = now.BeginningOfMonth()
 	default:
-		start = time.Date(year, 0, 0, 0, 0, 0, 0, time.Now().Location())
+		title = "全年统计"
+		start = now.BeginningOfYear()
 	}
 	var exs []exercises
 
@@ -145,7 +144,11 @@ func (e *exercisesManager) check(flag, prefix string) (message string, err error
 	if err != nil {
 		return
 	}
-	message += prefix + "\n"
+	if prefix != "" {
+		message += prefix + "\n"
+	}
+
+	message += "\n===" + title + "===\n"
 	if len(exs) == 0 {
 		message += "还木有人健身"
 		return
@@ -162,7 +165,7 @@ func (e *exercisesManager) check(flag, prefix string) (message string, err error
 		rank = append(rank, e)
 	}
 	sort.Sort(rank)
-	message += "===========\n"
+	message += "====排行榜====\n"
 	for _, ent := range rank {
 		message += fmt.Sprintf("%s : %d", getUserName(ent.userID), ent.count) + "\n"
 	}

@@ -1,8 +1,8 @@
-hash: d9e3672a971cd1b4982b9a496b69a44e42de35656f24a014bd283b2c4c2b1df3
-updated: 2017-12-27T12:48:11.433052609+09:00
+hash: b75ec5c8832a01488807f79ae59ec6aa0a6ebe8c6fa6f285167f27aa6ba4765d
+updated: 2018-01-17T12:42:15.834702+09:00
 imports:
 - name: github.com/aws/aws-sdk-go
-  version: 82ad808f2307df0776c038bfd7ea85440a35c02e
+  version: fe3adbda9bc845e750e3e5767c0a14dff202b2cc
   subpackages:
   - aws
   - aws/awserr
@@ -33,6 +33,8 @@ imports:
   - service/sts
 - name: github.com/go-ini/ini
   version: 32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a
+- name: github.com/jinzhu/now
+  version: d939ba741945c047cac69c329c5fb0d6b4a06520
 - name: github.com/jmespath/go-jmespath
   version: dd801d4f4ce7ac746e7e7b4489d2fa600b3b096b
 - name: github.com/line/line-bot-sdk-go
