@@ -71,7 +71,7 @@ func (e *exercisesManager) add(userID string) (message string, err error) {
 	if err != nil {
 		return
 	}
-	return e.check("", "")
+	return e.check("w", "偉い！偉い！偉い！偉い！偉い！")
 }
 
 func (e *exercisesManager) remove(userID string) (message string, err error) {
