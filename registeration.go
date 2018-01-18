@@ -371,6 +371,14 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		},
 	))
 
+	dispatcher.RegisterWithID([]string{"jsc.w"}, []string{moyu}, actionDispatcher.NewReplayAction(
+		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+			message, err := em.check("w", "")
+			messages = append(messages, linebot.NewTextMessage(message))
+			return messages, err
+		},
+	))
+
 	dispatcher.RegisterWithID([]string{"jsj"}, []string{moyu}, actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			message, err := em.join(event.Source.UserID)
