@@ -71,7 +71,7 @@ func (e *exercisesManager) add(userID string) (message string, err error) {
 	if err != nil {
 		return
 	}
-	return e.check("w", "偉い！偉い！偉い！偉い！偉い！")
+	return e.check("w", "偉い！偉い！偉い！偉い！偉い！git add ")
 }
 
 func (e *exercisesManager) remove(userID string) (message string, err error) {
@@ -124,6 +124,7 @@ func (l List) Less(i, j int) bool {
 func (e *exercisesManager) check(flag, prefix string) (message string, err error) {
 	var start time.Time
 	var title string
+	now.FirstDayMonday = true
 	switch flag {
 	case "w":
 		title = "本周统计"
