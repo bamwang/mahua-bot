@@ -11,44 +11,82 @@ import (
 )
 
 var (
-	apiURL = "https://eth.nanopool.org/api/v1/load_account"
+	generalInfoURL = "https://api.nanopool.org/v1/eth/user"
+	reportedURL    = "https://api.nanopool.org/v1/eth/reportedhashrates"
+	averageURL     = "https://api.nanopool.org/v1/eth/avghashrateworkers"
 )
 
-type HashData struct {
-	UserParams  UserParams  `json:userParams`
-	AvgHashRate AvgHashRate `json:avgHashRate`
+type Res interface {
+	// GetData() interface{}
+	GetStatus() bool
+}
+type ReportedHashrateRes struct {
+	Status bool                   `json:status`
+	Data   []ReportedHashrateData `json:data`
 }
 
-type UserParams struct {
-	HashRate  float32 `json:hashrate`
-	Reported  float32 `json:reported`
-	Balance   float32 `json:balance`
-	TotalPaid float32 `json:e_sum`
+type ReportedHashrateData struct {
+	Worker   string  `json:worker`
+	Hashrate float32 `json:hashrate`
 }
 
-type AvgHashRate struct {
-	H24 string `json:h24`
-	H12 string `json:h12`
-	H6  string `json:h6`
-	H3  string `json:h3`
-	H1  string `json:h1`
+type GeneralInfoRes struct {
+	Status bool            `json:status`
+	Data   GeneralInfoData `json:data`
 }
 
-type HashRes struct {
-	Status bool     `json:"status"`
-	Data   HashData `json:"data"`
+type GeneralInfoData struct {
+	Balance            float32 `json:balance`
+	UnconfirmedBalance float32 `json:unconfirmed_balance`
+	Hashrate           float32 `json:hashrate`
+	AvgHashRate        struct {
+		H24 float32 `json:h24`
+		H12 float32 `json:h12`
+		H6  float32 `json:h6`
+		H3  float32 `json:h3`
+		H1  float32 `json:h1`
+	} `json:avgHashRate`
+}
+
+type AvgHashrateWorkersRes struct {
+	Status bool                   `json:status`
+	Data   AvgHashrateWorkersData `json:data`
+}
+type AvgHashrateWorkersData struct {
+	H24 []AvgHashrateWorkersDataDetail `json:h24`
+	H12 []AvgHashrateWorkersDataDetail `json:h12`
+	H6  []AvgHashrateWorkersDataDetail `json:h6`
+	H3  []AvgHashrateWorkersDataDetail `json:h3`
+	H1  []AvgHashrateWorkersDataDetail `json:h1`
+}
+
+type AvgHashrateWorkersDataDetail struct {
+	Worker   string  `json:worker`
+	Hashrate float32 `json:hashrate`
+}
+
+func (res *GeneralInfoRes) GetStatus() bool {
+	return res.Status
+}
+
+func (res *ReportedHashrateRes) GetStatus() bool {
+	return res.Status
+}
+
+func (res *AvgHashrateWorkersRes) GetStatus() bool {
+	return res.Status
 }
 
 func getMiningStatus(event *linebot.Event, messages []linebot.Message, address, dig string) []linebot.Message {
 	println("hash")
 	if _, ok := event.Message.(*linebot.TextMessage); ok {
-		messages = append(messages, linebot.NewTextMessage(do(address, dig)))
+		messages = append(messages, linebot.NewTextMessage(do(address)))
 	}
 	return messages
 }
 
-func do(address, dig string) (rep string) {
-	url := fmt.Sprintf("%s/%s/%s", apiURL, address, dig)
+func call(baseURL, address string, res Res) (Res, bool) {
+	url := fmt.Sprintf("%s/%s", baseURL, address)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Print(err)
@@ -57,24 +95,104 @@ func do(address, dig string) (rep string) {
 	if err != nil {
 		log.Print(err)
 	}
-	var respStruct HashRes
 	log.Println(url)
+	log.Println(string(resBody))
+	if err := json.Unmarshal(resBody, &res); err != nil {
+		log.Print(err)
+	}
+	return res, res.GetStatus()
+}
+
+func getGeneralInfo(address string) (GeneralInfoData, bool) {
+	generalInfoURL := fmt.Sprintf("%s/%s", generalInfoURL, address)
+	resp, err := http.Get(generalInfoURL)
+	if err != nil {
+		log.Print(err)
+	}
+	resBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Print(err)
+	}
+	var respStruct GeneralInfoRes
+	log.Println(generalInfoURL)
 	log.Println(string(resBody))
 	if err := json.Unmarshal(resBody, &respStruct); err != nil {
 		log.Print(err)
 	}
-	data := respStruct.Data
+	return respStruct.Data, respStruct.Status
+}
+
+func getReportedHashrates(address string) ([]ReportedHashrateData, bool) {
+	reportedURL := fmt.Sprintf("%s/%s", reportedURL, address)
+	resp, err := http.Get(reportedURL)
+	if err != nil {
+		log.Print(err)
+	}
+	resBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Print(err)
+	}
+	var respStruct ReportedHashrateRes
+	log.Println(reportedURL)
+	log.Println(string(resBody))
+	if err := json.Unmarshal(resBody, &respStruct); err != nil {
+		log.Print(err)
+	}
+	return respStruct.Data, respStruct.Status
+}
+
+func do(address string) (rep string) {
 	rep += fmt.Sprintf("address  : %s\n", address)
-	rep += fmt.Sprintf("hashrate : %f\n", data.UserParams.HashRate)
-	rep += fmt.Sprintf("reported : %f\n", data.UserParams.Reported)
-	rep += fmt.Sprintf("balance  : %f\n", data.UserParams.Balance)
-	rep += fmt.Sprintf("total    : %f\n", data.UserParams.TotalPaid)
-	rep += fmt.Sprintln("=================")
-	rep += fmt.Sprintf("h1  : %s\n", data.AvgHashRate.H1)
-	rep += fmt.Sprintf("h3  : %s\n", data.AvgHashRate.H3)
-	rep += fmt.Sprintf("h6  : %s\n", data.AvgHashRate.H6)
-	rep += fmt.Sprintf("h12 : %s\n", data.AvgHashRate.H12)
-	rep += fmt.Sprintf("h24 : %s\n", data.AvgHashRate.H24)
+	{
+		var res GeneralInfoRes
+		call(generalInfoURL, address, &res)
+		if res.Status == true {
+			rep += fmt.Sprintf("hashrate : %f\n", res.Data.Hashrate)
+			rep += fmt.Sprintf("balance  : %f\n", res.Data.Balance)
+			rep += fmt.Sprintln("======== Total =========")
+			rep += fmt.Sprintf("h1       : %6.2f\n", res.Data.AvgHashRate.H1)
+			rep += fmt.Sprintf("h3       : %6.2f\n", res.Data.AvgHashRate.H3)
+			rep += fmt.Sprintf("h6       : %6.2f\n", res.Data.AvgHashRate.H6)
+			rep += fmt.Sprintf("h12      : %6.2f\n", res.Data.AvgHashRate.H12)
+			rep += fmt.Sprintf("h24      : %6.2f\n", res.Data.AvgHashRate.H24)
+		}
+	}
+	{
+		var reportRes ReportedHashrateRes
+		var avgRes AvgHashrateWorkersRes
+		// var res
+		call(reportedURL, address, &reportRes)
+		call(averageURL, address, &avgRes)
+		type MappedHashrate struct {
+			AvgH1    float32
+			AvgH6    float32
+			Reported float32
+		}
+		m := map[string]MappedHashrate{}
+		if reportRes.Status == true {
+			for _, worker := range reportRes.Data {
+				m[worker.Worker] = MappedHashrate{
+					Reported: worker.Hashrate,
+				}
+			}
+			for _, worker := range avgRes.Data.H1 {
+				if w, has := m[worker.Worker]; has {
+					w.AvgH1 = worker.Hashrate
+				}
+			}
+			for _, worker := range avgRes.Data.H6 {
+				if w, has := m[worker.Worker]; has {
+					w.AvgH6 = worker.Hashrate
+				}
+			}
+		}
+		for name, hashrate := range m {
+			rep += fmt.Sprintln("======== " + name + " =========")
+			rep += fmt.Sprintf("reported : %6.2f\n", hashrate.Reported)
+			rep += fmt.Sprintf("h1       : %6.2f\n", hashrate.AvgH1)
+			rep += fmt.Sprintf("h6       : %6.2f\n", hashrate.AvgH6)
+		}
+	}
 	log.Println(rep)
 	return rep
 }
