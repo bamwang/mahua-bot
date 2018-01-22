@@ -36,15 +36,16 @@ type GeneralInfoRes struct {
 }
 
 type GeneralInfoData struct {
-	Balance            float32 `json:balance`
-	UnconfirmedBalance float32 `json:unconfirmed_balance`
-	Hashrate           float32 `json:hashrate`
+	Account            string `json:account`
+	Balance            string `json:balance`
+	UnconfirmedBalance string `json:unconfirmed_balance`
+	Hashrate           string `json:hashrate`
 	AvgHashRate        struct {
-		H24 float32 `json:h24`
-		H12 float32 `json:h12`
-		H6  float32 `json:h6`
-		H3  float32 `json:h3`
-		H1  float32 `json:h1`
+		H24 string `json:h24`
+		H12 string `json:h12`
+		H6  string `json:h6`
+		H3  string `json:h3`
+		H1  string `json:h1`
 	} `json:avgHashRate`
 }
 
@@ -147,14 +148,14 @@ func do(address string) (rep string) {
 		var res GeneralInfoRes
 		call(generalInfoURL, address, &res)
 		if res.Status == true {
-			rep += fmt.Sprintf("hashrate : %f\n", res.Data.Hashrate)
-			rep += fmt.Sprintf("balance  : %f\n", res.Data.Balance)
+			rep += fmt.Sprintf("hashrate : %s\n", res.Data.Hashrate)
+			rep += fmt.Sprintf("balance  : %s\n", res.Data.Balance)
 			rep += fmt.Sprintln("======== Total =========")
-			rep += fmt.Sprintf("h1       : %6.2f\n", res.Data.AvgHashRate.H1)
-			rep += fmt.Sprintf("h3       : %6.2f\n", res.Data.AvgHashRate.H3)
-			rep += fmt.Sprintf("h6       : %6.2f\n", res.Data.AvgHashRate.H6)
-			rep += fmt.Sprintf("h12      : %6.2f\n", res.Data.AvgHashRate.H12)
-			rep += fmt.Sprintf("h24      : %6.2f\n", res.Data.AvgHashRate.H24)
+			rep += fmt.Sprintf("h1       : %s\n", res.Data.AvgHashRate.H1)
+			rep += fmt.Sprintf("h3       : %s\n", res.Data.AvgHashRate.H3)
+			rep += fmt.Sprintf("h6       : %s\n", res.Data.AvgHashRate.H6)
+			rep += fmt.Sprintf("h12      : %s\n", res.Data.AvgHashRate.H12)
+			rep += fmt.Sprintf("h24      : %s\n", res.Data.AvgHashRate.H24)
 		}
 	}
 	{
@@ -178,11 +179,13 @@ func do(address string) (rep string) {
 			for _, worker := range avgRes.Data.H1 {
 				if w, has := m[worker.Worker]; has {
 					w.AvgH1 = worker.Hashrate
+					m[worker.Worker] = w
 				}
 			}
 			for _, worker := range avgRes.Data.H6 {
 				if w, has := m[worker.Worker]; has {
 					w.AvgH6 = worker.Hashrate
+					m[worker.Worker] = w
 				}
 			}
 		}
