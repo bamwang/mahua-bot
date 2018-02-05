@@ -192,7 +192,12 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			case "g":
 
 				sendTo(userIDs, name+"喊道：走啦走啦！去吃饭啦！")
-				messages = append(messages, linebot.NewTextMessage("走啦走啦：\n"+strings.Join(names, "\n")))
+				prefix := ""
+				weekday := time.Now().Weekday()
+				if weekday == time.Monday || weekday == time.Thursday {
+					prefix = "今天是吃刀削面的日子（" + weekday.String() + ")\n"
+				}
+				messages = append(messages, linebot.NewTextMessage(prefix+"走啦走啦：\n"+strings.Join(names, "\n")))
 			}
 		}
 		return
