@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -72,40 +73,54 @@ func (d *ActionDispatcher) Dispatch(event *linebot.Event) {
 		return
 	}
 
+	// decide whether start a new conversion
 	message, ok := event.Message.(*linebot.TextMessage)
+	var words []string
 	if ok {
-		action, has := d.keywordActionMap[message.Text]
-		sourcesTypes := d.keywordSourcesMap[message.Text]
-		idsTypes := d.keywordIDsMap[message.Text]
-		typeMatched := len(sourcesTypes) == 0
-		idMatched := len(idsTypes) == 0
-		for _, eventType := range sourcesTypes {
-			if event.Source.Type == eventType {
-				typeMatched = true
-				break
-			}
-		}
-		for _, id := range idsTypes {
-			if event.Source.UserID == id || event.Source.GroupID == id || event.Source.RoomID == id {
-				idMatched = true
-				break
-			}
-		}
-		if has && (typeMatched && idMatched) {
-			var c *Context
-			replied, c, err = action.do(event, d.client, nil)
-			if err != nil {
-				log.Println(err)
-			}
-			if c != nil {
-				d.contextGroup.Put(event.Source, c)
-			}
-		}
-		if replied {
-			return
-		}
+		words = strings.Split(message.Text, " ")
+	}
+	if len(words) == 0 {
+		d.doDefaultAction(event)
+		return
 	}
 
+	keyword := words[0]
+	action, has := d.keywordActionMap[keyword]
+	sourcesTypes := d.keywordSourcesMap[keyword]
+	idsTypes := d.keywordIDsMap[keyword]
+	typeMatched := len(sourcesTypes) == 0
+	idMatched := len(idsTypes) == 0
+	for _, eventType := range sourcesTypes {
+		if event.Source.Type == eventType {
+			typeMatched = true
+			break
+		}
+	}
+	for _, id := range idsTypes {
+		if event.Source.UserID == id || event.Source.GroupID == id || event.Source.RoomID == id {
+			idMatched = true
+			break
+		}
+	}
+	if has && (typeMatched && idMatched) {
+		var c *Context
+		replied, c, err = action.do(event, d.client, nil)
+		if err != nil {
+			log.Println(err)
+		}
+		if c != nil {
+			d.contextGroup.Put(event.Source, c)
+		}
+	}
+	if replied {
+		return
+	}
+
+	// do default action
+	d.doDefaultAction(event)
+}
+
+func (d *ActionDispatcher) doDefaultAction(event *linebot.Event) {
 	if d.defaultAction != nil {
 		action := d.defaultAction
 		_, _, err := action.do(event, d.client, nil)
