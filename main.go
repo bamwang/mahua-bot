@@ -193,6 +193,22 @@ func main() {
 		publish(w, req, publications, []string{laosiji}, "最新麻花群发测试", false)
 	})
 
+	http.HandleFunc("/noti", func(w http.ResponseWriter, req *http.Request) {
+		data := map[string]string{}
+		err = json.NewDecoder(req.Body).Decode(&data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		id := data["id"]
+		message := data["message"]
+		if id == "" || message == "" {
+			w.WriteHeader(400)
+			return
+		}
+		sendTo([]string{id}, message)
+	})
+
 	// Setup HTTP Server for receiving requests from LINE platform
 	http.HandleFunc("/callback", func(w http.ResponseWriter, req *http.Request) {
 		events, err := bot.ParseRequest(req)
