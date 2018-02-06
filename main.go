@@ -200,6 +200,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		log.Printf("%+v", data)
 		id := data["id"]
 		message := data["message"]
 		if id == "" || message == "" {
