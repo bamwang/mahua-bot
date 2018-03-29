@@ -19,7 +19,7 @@ func forwardToBamhook(event *linebot.Event, messages []linebot.Message) []linebo
 	if message, ok := event.Message.(*linebot.TextMessage); ok {
 		args := strings.Split(message.Text, " ")
 		if len(args) < 4 {
-			messages = append(messages, linebot.NewTextMessage("参数错误"))
+			messages = append(messages, linebot.NewTextMessage("请发送\n上班:\ndk 社员号 密码 1\n下班:\ndk 社员号 密码 2"))
 			return messages
 		}
 		values := url.Values{}
