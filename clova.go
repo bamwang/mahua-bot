@@ -10,7 +10,7 @@ import (
 func forwardToClova(event *linebot.Event, messages []linebot.Message) []linebot.Message {
 	if message, ok := event.Message.(*linebot.TextMessage); ok {
 		args := strings.Split(message.Text, " ")
-		if len(args) < 3 {
+		if len(args) < 2 {
 			messages = append(messages, linebot.NewTextMessage("请发送\nclova 日语内容"))
 			return messages
 		}
