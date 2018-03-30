@@ -406,6 +406,13 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		},
 	))
 
+	dispatcher.RegisterWithType([]string{"clova"}, []linebot.EventSourceType{linebot.EventSourceTypeUser}, actionDispatcher.NewReplayAction(
+		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+			messages = forwardToClova(event, messages)
+			return messages, err
+		},
+	))
+
 	defaultAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		switch event.Source.Type {
 		case linebot.EventSourceTypeUser:
