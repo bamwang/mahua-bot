@@ -10,11 +10,7 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
-var (
-	endpoint = "https://bam-hook.herokuapp.com/e4628"
-)
-
-func forwardToBamhook(event *linebot.Event, messages []linebot.Message) []linebot.Message {
+func forwardToE4628(event *linebot.Event, messages []linebot.Message) []linebot.Message {
 	println("tuling")
 	if message, ok := event.Message.(*linebot.TextMessage); ok {
 		args := strings.Split(message.Text, " ")
@@ -26,12 +22,12 @@ func forwardToBamhook(event *linebot.Event, messages []linebot.Message) []linebo
 		values.Set("username", args[1])
 		values.Set("password", args[2])
 		values.Set("type", args[3])
-		messages = append(messages, linebot.NewTextMessage(post(values.Encode())))
+		messages = append(messages, linebot.NewTextMessage(post("https://bam-hook.herokuapp.com/e4628", values.Encode())))
 	}
 	return messages
 }
 
-func post(body string) string {
+func post(endpoint, body string) string {
 	resp, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(body))
 	if err != nil {
 		log.Print(err)

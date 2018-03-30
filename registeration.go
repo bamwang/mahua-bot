@@ -394,7 +394,14 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 
 	dispatcher.RegisterWithType([]string{"dk"}, []linebot.EventSourceType{linebot.EventSourceTypeUser}, actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
-			messages = forwardToBamhook(event, messages)
+			messages = forwardToE4628(event, messages)
+			return messages, err
+		},
+	))
+
+	dispatcher.RegisterWithType([]string{"qr"}, []linebot.EventSourceType{linebot.EventSourceTypeUser}, actionDispatcher.NewReplayAction(
+		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+			messages = forwardToQR(event, messages)
 			return messages, err
 		},
 	))
