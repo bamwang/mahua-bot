@@ -43,8 +43,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 
 	// msgs
 	MsgsHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
-		message := createMassageInfo(massages)
-		messages = append(messages, message)
+		messages = forwardToMsgc(event, messages)
 		return
 	}
 	dispatcher.RegisterWithType([]string{"msgs"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MsgsHandler))
