@@ -110,23 +110,14 @@ func main() {
 		var err error
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		if req.Method == http.MethodGet {
-			err = massages.Find(nil).Sort("-_id").One(&blocks)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			b, err := json.Marshal(blocks)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			if _, err := bot.PushMessage(moyu, createMassageInfo(massages)).Do(); err != nil {
+			messages := forwardToMsgc(nil, []linebot.Message{})
+			if _, err := bot.PushMessage(moyu, messages[0]).Do(); err != nil {
 				w.WriteHeader(500)
 				w.Write([]byte("fail"))
 				log.Println(err)
 				return
 			}
-			w.Write(b)
+			w.Write([]byte("done"))
 			return
 		}
 		if req.Method == http.MethodPost {
