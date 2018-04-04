@@ -34,16 +34,26 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	dispatcher.RegisterWithType([]string{"23b"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(f23MenuHandler))
 
 	// msg
-	MsgHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
-		message := createMassageMessage(event.Source.GroupID+event.Source.RoomID, massages)
-		messages = append(messages, message)
-		return
-	}
-	dispatcher.RegisterWithType([]string{"msg"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MsgHandler))
+	// MsgHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+	// 	message := createMassageMessage(event.Source.GroupID+event.Source.RoomID, massages)
+	// 	messages = append(messages, message)
+	// 	return
+	// }
+	// dispatcher.RegisterWithType([]string{"msg"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MsgHandler))
 
 	// msgs
 	MsgsHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		messages = forwardToMsgc(event, messages)
+		var id string
+		switch event.Source.Type {
+		case linebot.EventSourceTypeGroup:
+			id = event.Source.GroupID
+		case linebot.EventSourceTypeRoom:
+			id = event.Source.RoomID
+		case linebot.EventSourceTypeUser:
+			id = event.Source.UserID
+		}
+		sendTo([]string{id}, "正在查询中")
 		return
 	}
 	dispatcher.RegisterWithType([]string{"msgs"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MsgsHandler))
