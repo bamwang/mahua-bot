@@ -43,7 +43,6 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 
 	// msgs
 	MsgsHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
-		messages = forwardToMsgc(event, messages)
 		var id string
 		switch event.Source.Type {
 		case linebot.EventSourceTypeGroup:
@@ -54,6 +53,8 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			id = event.Source.UserID
 		}
 		sendTo([]string{id}, "正在查询中")
+		messages = forwardToMsgc(event, messages)
+
 		return
 	}
 	dispatcher.RegisterWithType([]string{"msgs"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MsgsHandler))
