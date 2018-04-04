@@ -110,13 +110,15 @@ func main() {
 		var err error
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		if req.Method == http.MethodGet {
-			messages := forwardToMsgc(nil, []linebot.Message{})
-			if _, err := bot.PushMessage(moyu, messages[0]).Do(); err != nil {
-				w.WriteHeader(500)
-				w.Write([]byte("fail"))
-				log.Println(err)
-				return
-			}
+			go func() {
+				messages := forwardToMsgc(nil, []linebot.Message{})
+				if _, err := bot.PushMessage(moyu, messages[0]).Do(); err != nil {
+					w.WriteHeader(500)
+					w.Write([]byte("fail"))
+					log.Println(err)
+					return
+				}
+			}()
 			w.Write([]byte("done"))
 			return
 		}
