@@ -45,6 +45,7 @@ func New(client *linebot.Client) (actionDispatcher ActionDispatcher) {
 	actionDispatcher.keywordActionMap = make(map[string]Action)
 	actionDispatcher.keywordSourcesMap = make(map[string][]linebot.EventSourceType)
 	actionDispatcher.keywordIDsMap = make(map[string][]string)
+	actionDispatcher.docMap = make(map[string]string)
 	actionDispatcher.client = client
 	return
 }
