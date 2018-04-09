@@ -236,7 +236,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		return
 	})
 
-	dispatcher.RegisterWithType([]string{"麻花来"}, []linebot.EventSourceType{linebot.EventSourceTypeGroup, linebot.EventSourceTypeRoom}, "让麻花参与聊天", actionDispatcher.NewContextAction(
+	dispatcher.RegisterWithType([]string{"麻花来"}, []linebot.EventSourceType{linebot.EventSourceTypeGroup, linebot.EventSourceTypeRoom}, "让麻花参与聊天; 麻花拜拜: 让麻花离开", actionDispatcher.NewContextAction(
 		[]string{"麻花拜拜"},
 		mahuaActivateAction,
 		mahuaInactiveAction,
