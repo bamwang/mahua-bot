@@ -20,7 +20,7 @@ func createMassageInfo(massages *mgo.Collection) linebot.Message {
 	}
 	var rep string
 	if len(blocks.Blocks) == 0 {
-		rep = "残念！"
+		rep = "残念！没空床咯！"
 		return linebot.NewTextMessage(rep)
 	}
 	rep = "有空哦！\n"
