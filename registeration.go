@@ -31,7 +31,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		messages = append(messages, linebot.NewTemplateMessage("23F cafe menu", linebot.NewCarouselTemplate(donburiCol, saladCol, bentoCol, soupCol)))
 		return
 	}
-	dispatcher.RegisterWithType([]string{"23b"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(f23MenuHandler))
+	dispatcher.RegisterWithType([]string{"23b"}, []linebot.EventSourceType{}, "显示食堂购买支付菜单", actionDispatcher.NewReplayAction(f23MenuHandler))
 
 	// msg
 	// MsgHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
@@ -57,7 +57,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 
 		return
 	}
-	dispatcher.RegisterWithType([]string{"msgs"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MsgsHandler))
+	dispatcher.RegisterWithType([]string{"msgs"}, []linebot.EventSourceType{}, "查询当前空余马杀鸡情况", actionDispatcher.NewReplayAction(MsgsHandler))
 
 	// mahua gallery
 	MGHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
@@ -71,7 +71,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		messages = append(messages, linebot.NewImageMessage(bucketURLPrefix+mahuaOrigin, bucketURLPrefix+mahuaBase+"_thumbnail.jpg"))
 		return
 	}
-	dispatcher.RegisterWithType([]string{"看麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGHandler))
+	dispatcher.RegisterWithType([]string{"看麻花"}, []linebot.EventSourceType{}, "随机看一张麻花的照片", actionDispatcher.NewReplayAction(MGHandler))
 
 	// mahua gallery
 	MGNHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
@@ -84,7 +84,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		messages = append(messages, linebot.NewImageMessage(bucketURLPrefix+mahuaOrigin, bucketURLPrefix+mahuaBase+"_thumbnail.jpg"))
 		return
 	}
-	dispatcher.RegisterWithType([]string{"最新麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGNHandler))
+	dispatcher.RegisterWithType([]string{"最新麻花"}, []linebot.EventSourceType{}, "看最新的麻花照片", actionDispatcher.NewReplayAction(MGNHandler))
 
 	// mahua gallery subscription
 	MGSHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
@@ -115,7 +115,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		sendTo([]string{laosiji}, fmt.Sprintf("%s (%v) 订阅了麻花", name, event.Source.Type))
 		return
 	}
-	dispatcher.RegisterWithType([]string{"订阅麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGSHandler))
+	dispatcher.RegisterWithType([]string{"订阅麻花"}, []linebot.EventSourceType{}, "当有最新的麻花时通知你", actionDispatcher.NewReplayAction(MGSHandler))
 
 	// mahua gallery unsubscription
 	MGSCHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
@@ -143,7 +143,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		sendTo([]string{laosiji}, fmt.Sprintf("%s (%v) 退订了麻花", name, event.Source.Type))
 		return
 	}
-	dispatcher.RegisterWithType([]string{"退订麻花"}, []linebot.EventSourceType{}, actionDispatcher.NewReplayAction(MGSCHandler))
+	dispatcher.RegisterWithType([]string{"退订麻花"}, []linebot.EventSourceType{}, "取消订阅", actionDispatcher.NewReplayAction(MGSCHandler))
 
 	// mahua gallery unsubscription
 	MGPCHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
@@ -158,7 +158,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		messages = append(messages, linebot.NewTextMessage("停止群发麻花"))
 		return
 	}
-	dispatcher.RegisterWithID([]string{"cp"}, []string{laosiji}, actionDispatcher.NewReplayAction(MGPCHandler))
+	dispatcher.RegisterWithID([]string{"cp"}, []string{laosiji}, "取消之后的群发", actionDispatcher.NewReplayAction(MGPCHandler))
 
 	// fan
 	fanActivateAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
@@ -213,7 +213,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		return
 	})
 
-	dispatcher.RegisterWithType([]string{"f"}, []linebot.EventSourceType{linebot.EventSourceTypeGroup, linebot.EventSourceTypeRoom}, actionDispatcher.NewContextAction(
+	dispatcher.RegisterWithType([]string{"f"}, []linebot.EventSourceType{linebot.EventSourceTypeGroup, linebot.EventSourceTypeRoom}, "报告你要去参加群饭; nf 取消; c 查询现在状态; g 提醒大家出发; g! 停止募集", actionDispatcher.NewContextAction(
 		[]string{"g!"},
 		fanActivateAction,
 		fanInactiveAction,
@@ -236,7 +236,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		return
 	})
 
-	dispatcher.RegisterWithType([]string{"麻花来"}, []linebot.EventSourceType{linebot.EventSourceTypeGroup, linebot.EventSourceTypeRoom}, actionDispatcher.NewContextAction(
+	dispatcher.RegisterWithType([]string{"麻花来"}, []linebot.EventSourceType{linebot.EventSourceTypeGroup, linebot.EventSourceTypeRoom}, "让麻花参与聊天", actionDispatcher.NewContextAction(
 		[]string{"麻花拜拜"},
 		mahuaActivateAction,
 		mahuaInactiveAction,
@@ -273,7 +273,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		return
 	})
 
-	dispatcher.RegisterWithType([]string{"ft"}, []linebot.EventSourceType{linebot.EventSourceTypeUser}, actionDispatcher.NewContextAction(
+	dispatcher.RegisterWithType([]string{"ft"}, []linebot.EventSourceType{linebot.EventSourceTypeUser}, "以麻花身份在水群里发言; lt: 停止附体行为", actionDispatcher.NewContextAction(
 		[]string{"lt"},
 		futiActivateAction,
 		futiInactiveAction,
@@ -338,14 +338,14 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		return
 	})
 
-	dispatcher.RegisterWithID([]string{"mg"}, []string{laosiji}, actionDispatcher.NewContextAction(
+	dispatcher.RegisterWithID([]string{"mg"}, []string{laosiji}, "传麻花照片", actionDispatcher.NewContextAction(
 		[]string{"s"},
 		galleryActivateAction,
 		galleryInactiveAction,
 		galleryUsualAction,
 	))
 
-	dispatcher.RegisterWithID([]string{"hash"}, []string{laosiji}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithID([]string{"hash"}, []string{laosiji}, "显示eth挖矿状态", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			messages = getMiningStatus(event, messages, address, "")
 			return messages, err
@@ -354,7 +354,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 
 	em := exercisesManager{exercisesMeta, exercises}
 
-	dispatcher.RegisterWithID([]string{"js+"}, []string{moyu}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithID([]string{"js+"}, []string{moyu}, "健身+1", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			message, err := em.add(event.Source.UserID)
 			messages = append(messages, linebot.NewTextMessage(message))
@@ -362,7 +362,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		},
 	))
 
-	dispatcher.RegisterWithID([]string{"js-"}, []string{moyu}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithID([]string{"js-"}, []string{moyu}, "健身-1", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			message, err := em.remove(event.Source.UserID)
 			messages = append(messages, linebot.NewTextMessage(message))
@@ -370,7 +370,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		},
 	))
 
-	dispatcher.RegisterWithID([]string{"jsc"}, []string{moyu}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithID([]string{"jsc"}, []string{moyu}, "健身查询", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			message, err := em.check("", "")
 			messages = append(messages, linebot.NewTextMessage(message))
@@ -378,7 +378,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		},
 	))
 
-	dispatcher.RegisterWithID([]string{"jsc.m"}, []string{moyu}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithID([]string{"jsc.m"}, []string{moyu}, "本月健身查询", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			message, err := em.check("m", "")
 			messages = append(messages, linebot.NewTextMessage(message))
@@ -386,7 +386,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		},
 	))
 
-	dispatcher.RegisterWithID([]string{"jsc.w"}, []string{moyu}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithID([]string{"jsc.w"}, []string{moyu}, "本周健身查询", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			message, err := em.check("w", "")
 			messages = append(messages, linebot.NewTextMessage(message))
@@ -394,7 +394,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		},
 	))
 
-	dispatcher.RegisterWithID([]string{"jsj"}, []string{moyu}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithID([]string{"jsj"}, []string{moyu}, "参与健身计划", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			message, err := em.join(event.Source.UserID)
 			messages = append(messages, linebot.NewTextMessage(message))
@@ -402,21 +402,21 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		},
 	))
 
-	dispatcher.RegisterWithType([]string{"dk"}, []linebot.EventSourceType{linebot.EventSourceTypeUser}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithType([]string{"dk"}, []linebot.EventSourceType{linebot.EventSourceTypeUser}, "打卡: 输入dk取得详细说明", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			messages = forwardToE4628(event, messages)
 			return messages, err
 		},
 	))
 
-	dispatcher.RegisterWithType([]string{"qr"}, []linebot.EventSourceType{linebot.EventSourceTypeUser}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithType([]string{"qr"}, []linebot.EventSourceType{linebot.EventSourceTypeUser}, "忘带社员证时发行QR: 输入qr取得详细说明", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			messages = forwardToQR(event, messages)
 			return messages, err
 		},
 	))
 
-	dispatcher.RegisterWithID([]string{"clova"}, []string{}, actionDispatcher.NewReplayAction(
+	dispatcher.RegisterWithID([]string{"clova"}, []string{moyu, laosiji}, "clova 日语文本: 调戏clova", actionDispatcher.NewReplayAction(
 		func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 			messages = forwardToClova(event, messages)
 			return messages, err
@@ -439,5 +439,5 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 		}
 		return
 	})
-	dispatcher.RegisterDefaultAction(defaultAction)
+	dispatcher.RegisterDefaultAction(defaultAction, "")
 }

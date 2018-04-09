@@ -33,9 +33,11 @@ type ActionDispatcher struct {
 	client            *linebot.Client
 	contextGroup      contextGroup
 	defaultAction     Action
+	defaultDoc        string
 	keywordActionMap  map[string]Action
 	keywordSourcesMap map[string][]linebot.EventSourceType
 	keywordIDsMap     map[string][]string
+	docMap            map[string]string
 }
 
 func New(client *linebot.Client) (actionDispatcher ActionDispatcher) {
@@ -85,7 +87,7 @@ func (d *ActionDispatcher) Dispatch(event *linebot.Event) {
 	}
 
 	keyword := words[0]
-	action, has := d.keywordActionMap[keyword]
+	action, hasAction := d.keywordActionMap[keyword]
 	sourcesTypes := d.keywordSourcesMap[keyword]
 	idsTypes := d.keywordIDsMap[keyword]
 	typeMatched := len(sourcesTypes) == 0
@@ -97,12 +99,12 @@ func (d *ActionDispatcher) Dispatch(event *linebot.Event) {
 		}
 	}
 	for _, id := range idsTypes {
-		if event.Source.UserID == id || event.Source.GroupID == id || event.Source.RoomID == id {
+		if getTargetID(event) == id {
 			idMatched = true
 			break
 		}
 	}
-	if has && (typeMatched && idMatched) {
+	if hasAction && (typeMatched && idMatched) {
 		var c *Context
 		replied, c, err = action.do(event, d.client, nil)
 		if err != nil {
@@ -114,6 +116,10 @@ func (d *ActionDispatcher) Dispatch(event *linebot.Event) {
 	}
 	if replied {
 		return
+	}
+
+	if words[0] == "m?" {
+		d.replyDoc(event, d.client, nil)
 	}
 
 	// do default action
@@ -128,6 +134,55 @@ func (d *ActionDispatcher) doDefaultAction(event *linebot.Event) {
 			log.Println(err)
 		}
 	}
+}
+
+func getTargetID(event *linebot.Event) (id string) {
+	switch event.Source.Type {
+	case linebot.EventSourceTypeGroup:
+		id = event.Source.GroupID
+	case linebot.EventSourceTypeRoom:
+		id = event.Source.RoomID
+	case linebot.EventSourceTypeUser:
+		id = event.Source.UserID
+	}
+	return
+}
+
+func (d *ActionDispatcher) replyDoc(event *linebot.Event, client *linebot.Client, context *Context) {
+	NewReplayAction(func(event *linebot.Event, context *Context) (messages []linebot.Message, err error) {
+		text := "命令列表\n"
+		if d.defaultDoc != "" {
+			text += d.defaultDoc + "\n"
+		}
+		matchingID := getTargetID(event)
+		for keyword := range d.keywordActionMap {
+			skip := false
+			if doc, has := d.docMap[keyword]; !has || doc == "" {
+				skip = true
+			}
+			if ids, has := d.keywordIDsMap[keyword]; has && !skip {
+				for _, id := range ids {
+					if id != matchingID {
+						skip = true
+					}
+				}
+			}
+			if sources, has := d.keywordSourcesMap[keyword]; has && !skip {
+				for _, source := range sources {
+					if event.Source.Type != source {
+						skip = true
+					}
+				}
+			}
+			if skip {
+				continue
+			}
+			text += fmt.Sprintf("%s: %s\n", keyword, d.docMap[keyword])
+		}
+		message := linebot.NewTextMessage(text)
+		messages = append(messages, message)
+		return
+	}).do(event, client, context)
 }
 
 func NewReplayAction(actionHandler ReplyActionHandler) (action ReplyAction) {
@@ -169,26 +224,29 @@ func NewContextAction(inactivateCommands []string, activateAction, incativateAct
 
 // RegisterWithType will register action to dispatcher.
 // If sourceTypes is empty, dispatcher will ignore ids
-func (d *ActionDispatcher) RegisterWithType(commands []string, sourceTypes []linebot.EventSourceType, action Action) {
+func (d *ActionDispatcher) RegisterWithType(commands []string, sourceTypes []linebot.EventSourceType, doc string, action Action) {
 	for _, command := range commands {
 		d.keywordActionMap[command] = action
 		d.keywordSourcesMap[command] = sourceTypes
+		d.docMap[command] = doc
 	}
 }
 
 // RegisterWithID will register action to dispatcher.
 // If ids is empty, dispatcher will ignore ids
-func (d *ActionDispatcher) RegisterWithID(commands []string, ids []string, action Action) {
+func (d *ActionDispatcher) RegisterWithID(commands []string, ids []string, doc string, action Action) {
 	for _, command := range commands {
 		d.keywordActionMap[command] = action
 		d.keywordIDsMap[command] = ids
+		d.docMap[command] = doc
 	}
 }
 
 // RegisterDefaultAction will register default action
 // action will responed
-func (d *ActionDispatcher) RegisterDefaultAction(action Action) {
+func (d *ActionDispatcher) RegisterDefaultAction(action Action, doc string) {
 	d.defaultAction = action
+	d.defaultDoc = doc
 	fmt.Println(d.keywordActionMap)
 	fmt.Println(d.keywordSourcesMap)
 	fmt.Println(d.keywordIDsMap)
