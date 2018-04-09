@@ -165,14 +165,20 @@ func (d *ActionDispatcher) replyDoc(event *linebot.Event, client *linebot.Client
 				for _, id := range ids {
 					if id != matchingID {
 						skip = true
+						continue
 					}
+					skip = false
+					break
 				}
 			}
 			if sources, has := d.keywordSourcesMap[keyword]; has && !skip {
 				for _, source := range sources {
 					if event.Source.Type != source {
 						skip = true
+						continue
 					}
+					skip = false
+					break
 				}
 			}
 			if skip {
