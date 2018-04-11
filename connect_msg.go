@@ -39,7 +39,7 @@ func forwardToMsgc(event *linebot.Event, messages []linebot.Message) []linebot.M
 		for _, massager := range msg["massagers"].([]interface{}) {
 			massagerNames = append(massagerNames, massager.(map[string]interface{})["name"].(string))
 		}
-		rep += fmt.Sprintf("%s@%s by %s\n", msg["time"].(string)[0:2], strings.Join(strings.Split(msg["date"].(string), ".")[1:], "."), strings.Join(massagerNames, ","))
+		rep += fmt.Sprintf("%s@%s by %s\n", msg["time"].(string), strings.Join(strings.Split(msg["date"].(string), ".")[1:], "."), strings.Join(massagerNames, ","))
 		if firstDate == "" {
 			firstDate = msg["date"].(string)
 		}
