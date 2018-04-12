@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/line/line-bot-sdk-go/linebot"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -25,7 +23,7 @@ func subscribe(id, key, name string, sourceType linebot.EventSourceType, subscri
 func checkSubscription(id, key string, subscribers *mgo.Collection) (has bool, err error) {
 	n, err := subscribers.Find(bson.M{
 		"uid":          id,
-		"itmes." + key: true,
+		"items." + key: true,
 	}).Count()
 	has = n > 0
 	return
@@ -36,7 +34,7 @@ func unsubscribe(id, key string, sourceType linebot.EventSourceType, subscribers
 		"uid": id,
 	}, bson.M{
 		"$set": bson.M{
-			"itmes." + key: false,
+			"ietes." + key: false,
 		},
 	})
 }
@@ -44,9 +42,8 @@ func unsubscribe(id, key string, sourceType linebot.EventSourceType, subscribers
 func getSubscriberIDs(key string, subscribers *mgo.Collection) (ids []string, err error) {
 	var subs []map[string]string
 	err = subscribers.Find(bson.M{
-		"itmes." + key: true,
+		"items." + key: true,
 	}).All(&subs)
-	log.Println(subs)
 	if err != nil {
 		return
 	}
