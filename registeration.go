@@ -99,7 +99,8 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			id = event.Source.GroupID
 		}
 		n, _ := subscribers.Find(bson.M{
-			"uid": id,
+			"uid":      id,
+			"itmes.mg": true,
 		}).Count()
 		if n == 1 {
 			messages = append(messages, linebot.NewTextMessage("已经在这订阅过麻花啦！"))
@@ -109,10 +110,10 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			"uid": id,
 		}, bson.M{
 			"$set": bson.M{
-				"name":               name, // will not be upadated automatically
-				"type":               event.Source.Type,
-				"updatedAt":          bson.Now(),
-				"subscribedItems.mg": true,
+				"name":      name, // will not be upadated automatically
+				"type":      event.Source.Type,
+				"updatedAt": bson.Now(),
+				"items.mg":  true,
 			},
 		})
 		messages = append(messages, linebot.NewTextMessage("麻花有新照照的时候都会第一时间通知你哒！"))
@@ -134,14 +135,19 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			id = event.Source.GroupID
 		}
 		n, _ := subscribers.Find(bson.M{
-			"uid": id,
+			"uid":      id,
+			"items.mg": true,
 		}).Count()
 		if n == 0 {
 			messages = append(messages, linebot.NewTextMessage("哼！你本来就没订阅麻花"))
 			return
 		}
-		subscribers.RemoveAll(bson.M{
+		subscribers.Update(bson.M{
 			"uid": id,
+		}, bson.M{
+			"$set": bson.M{
+				"items.mg": false,
+			},
 		})
 		messages = append(messages, linebot.NewTextMessage("你不喜欢麻花了吗？呜呜~~"))
 		sendTo([]string{laosiji}, fmt.Sprintf("%s (%v) 退订了麻花", name, event.Source.Type))
