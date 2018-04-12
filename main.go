@@ -154,7 +154,7 @@ func main() {
 		return
 	})
 
-	http.HandleFunc("/user", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/users", func(w http.ResponseWriter, req *http.Request) {
 		if req.Method != http.MethodPost {
 			w.WriteHeader(405)
 			return
@@ -166,13 +166,16 @@ func main() {
 			w.WriteHeader(400)
 			w.Write([]byte("fail"))
 			log.Println(err)
+			return
 		}
 		_, err = users.UpsertId(user.ID, user)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte("fail"))
 			log.Println(err)
+			return
 		}
+		w.Write([]byte("done"))
 	})
 
 	http.HandleFunc("/send", func(w http.ResponseWriter, req *http.Request) {
