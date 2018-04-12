@@ -105,11 +105,15 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			messages = append(messages, linebot.NewTextMessage("已经在这订阅过麻花啦！"))
 			return
 		}
-		subscribers.Insert(bson.M{
-			"uid":          id,
-			"name":         name, // will not be upadated automatically
-			"type":         event.Source.Type,
-			"subscribedAt": bson.Now(),
+		subscribers.Upsert(bson.M{
+			"uid": id,
+		}, bson.M{
+			"$set": bson.M{
+				"name":               name, // will not be upadated automatically
+				"type":               event.Source.Type,
+				"updatedAt":          bson.Now(),
+				"subscribedItems.mg": true,
+			},
 		})
 		messages = append(messages, linebot.NewTextMessage("麻花有新照照的时候都会第一时间通知你哒！"))
 		sendTo([]string{laosiji}, fmt.Sprintf("%s (%v) 订阅了麻花", name, event.Source.Type))
