@@ -100,7 +100,7 @@ func (d *ActionDispatcher) Dispatch(event *linebot.Event) {
 		}
 	}
 	for _, id := range idsTypes {
-		if getTargetID(event) == id {
+		if ExtractTargetID(event) == id {
 			idMatched = true
 			break
 		}
@@ -137,7 +137,7 @@ func (d *ActionDispatcher) doDefaultAction(event *linebot.Event) {
 	}
 }
 
-func getTargetID(event *linebot.Event) (id string) {
+func ExtractTargetID(event *linebot.Event) (id string) {
 	switch event.Source.Type {
 	case linebot.EventSourceTypeGroup:
 		id = event.Source.GroupID
@@ -155,7 +155,7 @@ func (d *ActionDispatcher) replyDoc(event *linebot.Event, client *linebot.Client
 		if d.defaultDoc != "" {
 			text += d.defaultDoc + "\n"
 		}
-		matchingID := getTargetID(event)
+		matchingID := ExtractTargetID(event)
 		for keyword := range d.keywordActionMap {
 			skip := false
 			if doc, has := d.docMap[keyword]; !has || doc == "" {

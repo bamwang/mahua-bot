@@ -211,12 +211,12 @@ func main() {
 	})
 
 	http.HandleFunc("/publish", func(w http.ResponseWriter, req *http.Request) {
-
-		subs := []map[string]string{}
-		subscribers.Find(nil).All(&subs)
-		ids := []string{}
-		for _, subscriber := range subs {
-			ids = append(ids, subscriber["uid"])
+		ids, err := getSubscriberIDs("mg", subscribers)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("fail"))
+			log.Println(err)
+			return
 		}
 		publish(w, req, publications, ids, "最新麻花来啦！", true)
 	})

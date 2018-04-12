@@ -43,15 +43,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 
 	// msgs
 	MsgsHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
-		var id string
-		switch event.Source.Type {
-		case linebot.EventSourceTypeGroup:
-			id = event.Source.GroupID
-		case linebot.EventSourceTypeRoom:
-			id = event.Source.RoomID
-		case linebot.EventSourceTypeUser:
-			id = event.Source.UserID
-		}
+		id := actionDispatcher.ExtractTargetID(event)
 		sendTo([]string{id}, "正在查询中")
 		messages = forwardToMsgc(event, messages)
 
@@ -89,33 +81,19 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	// mahua gallery subscription
 	MGSHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		name := getUserName(event.Source.UserID)
-		var id string
-		switch event.Source.Type {
-		case linebot.EventSourceTypeUser:
-			id = event.Source.UserID
-		case linebot.EventSourceTypeRoom:
-			id = event.Source.RoomID
-		case linebot.EventSourceTypeGroup:
-			id = event.Source.GroupID
+		id := actionDispatcher.ExtractTargetID(event)
+		has, err := checkSubscription(id, "mg", subscribers)
+		if err != nil {
+			return
 		}
-		n, _ := subscribers.Find(bson.M{
-			"uid":      id,
-			"itmes.mg": true,
-		}).Count()
-		if n == 1 {
+		if has {
 			messages = append(messages, linebot.NewTextMessage("已经在这订阅过麻花啦！"))
 			return
 		}
-		subscribers.Upsert(bson.M{
-			"uid": id,
-		}, bson.M{
-			"$set": bson.M{
-				"name":      name, // will not be upadated automatically
-				"type":      event.Source.Type,
-				"updatedAt": bson.Now(),
-				"items.mg":  true,
-			},
-		})
+		err = subscribe(id, "mg", name, event.Source.Type, subscribers)
+		if err != nil {
+			return
+		}
 		messages = append(messages, linebot.NewTextMessage("麻花有新照照的时候都会第一时间通知你哒！"))
 		sendTo([]string{laosiji}, fmt.Sprintf("%s (%v) 订阅了麻花", name, event.Source.Type))
 		return
@@ -125,30 +103,19 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 	// mahua gallery unsubscription
 	MGSCHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		name := getUserName(event.Source.UserID)
-		var id string
-		switch event.Source.Type {
-		case linebot.EventSourceTypeUser:
-			id = event.Source.UserID
-		case linebot.EventSourceTypeRoom:
-			id = event.Source.RoomID
-		case linebot.EventSourceTypeGroup:
-			id = event.Source.GroupID
+		id := actionDispatcher.ExtractTargetID(event)
+		has, err := checkSubscription(id, "mg", subscribers)
+		if err != nil {
+			return
 		}
-		n, _ := subscribers.Find(bson.M{
-			"uid":      id,
-			"items.mg": true,
-		}).Count()
-		if n == 0 {
+		if !has {
 			messages = append(messages, linebot.NewTextMessage("哼！你本来就没订阅麻花"))
 			return
 		}
-		subscribers.Update(bson.M{
-			"uid": id,
-		}, bson.M{
-			"$set": bson.M{
-				"items.mg": false,
-			},
-		})
+		err = unsubscribe(id, "mg", event.Source.Type, subscribers)
+		if err != nil {
+			return
+		}
 		messages = append(messages, linebot.NewTextMessage("你不喜欢麻花了吗？呜呜~~"))
 		sendTo([]string{laosiji}, fmt.Sprintf("%s (%v) 退订了麻花", name, event.Source.Type))
 		return
@@ -432,6 +399,46 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			return messages, err
 		},
 	))
+
+	msgSubHandlder := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		name := getUserName(event.Source.UserID)
+		id := actionDispatcher.ExtractTargetID(event)
+		has, err := checkSubscription(id, "msg", subscribers)
+		if err != nil {
+			return
+		}
+		if has {
+			messages = append(messages, linebot.NewTextMessage("已经在这订阅过马杀鸡通知了！"))
+			return
+		}
+		err = subscribe(id, "msg", name, event.Source.Type, subscribers)
+		if err != nil {
+			return
+		}
+		messages = append(messages, linebot.NewTextMessage("我会第一时间通知你空余的马杀鸡哒！"))
+		return
+	}
+	dispatcher.RegisterWithType([]string{"msgsub"}, []linebot.EventSourceType{}, "10~19点的每个整点05分，通知你前的空余马杀鸡", actionDispatcher.NewReplayAction(msgSubHandlder))
+
+	// mahua gallery unsubscription
+	msgUnsubHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
+		id := actionDispatcher.ExtractTargetID(event)
+		has, err := checkSubscription(id, "msg", subscribers)
+		if err != nil {
+			return
+		}
+		if !has {
+			messages = append(messages, linebot.NewTextMessage("已并未订阅通知"))
+			return
+		}
+		err = unsubscribe(id, "msg", event.Source.Type, subscribers)
+		if err != nil {
+			return
+		}
+		messages = append(messages, linebot.NewTextMessage("已退订通知"))
+		return
+	}
+	dispatcher.RegisterWithType([]string{"msgunsub"}, []linebot.EventSourceType{}, "取消订阅马杀鸡", actionDispatcher.NewReplayAction(msgUnsubHandler))
 
 	defaultAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		switch event.Source.Type {
