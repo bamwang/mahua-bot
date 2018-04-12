@@ -121,11 +121,15 @@ func main() {
 		if req.Method == http.MethodGet {
 			go func() {
 				messages := forwardToMsgc(nil, []linebot.Message{})
-				if _, err := bot.PushMessage(moyu, messages[0]).Do(); err != nil {
-					w.WriteHeader(500)
-					w.Write([]byte("fail"))
+				ids, err := getSubscriberIDs("msg", subscribers)
+				if err != nil {
 					log.Println(err)
 					return
+				}
+				for _, id := range ids {
+					if _, err := bot.PushMessage(id, messages[0]).Do(); err != nil {
+						log.Println(err)
+					}
 				}
 			}()
 			w.Write([]byte("done"))
