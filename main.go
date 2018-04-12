@@ -55,6 +55,14 @@ type publication struct {
 	PublishedAt time.Time     `bson:"publishedAt,omitempty"`
 }
 
+type User struct {
+	ID           string `bson:"_id" json:"id"`
+	Name         string `bson:"name" json:"name"`
+	AccessToken  string `bson:"accessToken" json:"accessToken"`
+	PortraitURL  string `bson:"portraitURL" json:"portraitURL"`
+	RefreshToken string `bson:"refreshToken" json:"refreshToken"`
+}
+
 func init() {
 	var err error
 	bot, err = linebot.New(
@@ -91,6 +99,7 @@ func main() {
 	// Optional. Switch the session to a monotonic behavior.
 	session.SetMode(mgo.Monotonic, true)
 
+	users := session.DB("").C("users")
 	massages := session.DB("").C("massages")
 	subscribers := session.DB("").C("subscribers")
 	publications := session.DB("").C("publications")
@@ -143,6 +152,27 @@ func main() {
 		}
 		w.WriteHeader(405)
 		return
+	})
+
+	http.HandleFunc("/user", func(w http.ResponseWriter, req *http.Request) {
+		if req.Method != http.MethodPost {
+			w.WriteHeader(405)
+			return
+		}
+
+		var user User
+		err := json.NewDecoder(req.Body).Decode(&user)
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte("fail"))
+			log.Println(err)
+		}
+		_, err = users.UpsertId(user.ID, user)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("fail"))
+			log.Println(err)
+		}
 	})
 
 	http.HandleFunc("/send", func(w http.ResponseWriter, req *http.Request) {
