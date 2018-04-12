@@ -160,6 +160,12 @@ func main() {
 			return
 		}
 
+		if req.Header.Get("secret") != os.Getenv("CHANNEL_SECRET") {
+			w.WriteHeader(403)
+			w.Write([]byte("auth fail"))
+			return
+		}
+
 		var user User
 		err := json.NewDecoder(req.Body).Decode(&user)
 		if err != nil {
