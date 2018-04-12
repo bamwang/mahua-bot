@@ -45,7 +45,7 @@ func getSubscriberIDs(key string, subscribers *mgo.Collection) (ids []string, er
 	var subs []map[string]string
 	err = subscribers.Find(bson.M{
 		"itmes." + key: true,
-	}).Select(bson.M{"uid": 1}).All(&subs)
+	}).All(&subs)
 	log.Println(subs)
 	if err != nil {
 		return
