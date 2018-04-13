@@ -34,7 +34,7 @@ func unsubscribe(id, key string, sourceType linebot.EventSourceType, subscribers
 		"uid": id,
 	}, bson.M{
 		"$set": bson.M{
-			"ietes." + key: false,
+			"items." + key: false,
 		},
 	})
 }
