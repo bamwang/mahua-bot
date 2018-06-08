@@ -452,19 +452,27 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 					messages = forwardToTuling(event, messages)
 					return
 				}
-
 				if strings.HasPrefix(message.Text, "@all") || strings.HasPrefix(message.Text, "@here") || strings.HasPrefix(message.Text, "@所有人") {
 					replacer := strings.NewReplacer("@all", "", "@here", "", "@所有人", "")
 					message.Text = replacer.Replace(message.Text)
 					var userIDs []string
 					if event.Source.Type == linebot.EventSourceTypeRoom {
-						res, _ := bot.GetRoomMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
+						res, _err := bot.GetRoomMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
 						userIDs = res.MemberIDs
+						if err != nil {
+							err = _err
+							return
+						}
 					}
 					if event.Source.Type == linebot.EventSourceTypeGroup {
-						res, _ := bot.GetGroupMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
+						res, _err := bot.GetGroupMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
 						userIDs = res.MemberIDs
+						if err != nil {
+							err = _err
+							return
+						}
 					}
+
 					sendTo(userIDs, message.Text)
 				}
 			}
