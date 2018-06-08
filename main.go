@@ -63,6 +63,12 @@ type User struct {
 	RefreshToken string `bson:"refreshToken" json:"refreshToken"`
 }
 
+type Group struct {
+	ID    string                  `bson:"_id" json:"id"`
+	Type  linebot.EventSourceType `bson:"type" json:"type"`
+	Users map[string]interface{}  `bson:"users" json:"users"`
+}
+
 func init() {
 	var err error
 	bot, err = linebot.New(
@@ -105,6 +111,7 @@ func main() {
 	publications := session.DB("").C("publications")
 	exercises := session.DB("").C("exercises")
 	exercisesMeta := session.DB("").C("exercisesMeta")
+	groups := session.DB("").C("groups")
 
 	register(&dispatcher, massages, subscribers, publications, exercises, exercisesMeta)
 
@@ -260,6 +267,22 @@ func main() {
 		for _, event := range events {
 			b, _ := json.Marshal(event)
 			log.Println("REQ: " + string(b))
+			var group Group
+			groupID := actionDispatcher.ExtractTargetID(event)
+			err := groups.FindId(groupID).One(&group)
+			if err == mgo.ErrNotFound {
+				group = Group{
+					Users: map[string]interface{}{},
+				}
+			}
+			if err != nil && err != mgo.ErrNotFound {
+				log.Println(err.Error())
+			} else {
+				group.Users[event.Source.UserID] = true
+				group.Type = event.Source.Type
+				group.ID = groupID
+				groups.UpdateId(groupID, group)
+			}
 			dispatcher.Dispatch(event)
 		}
 	})
