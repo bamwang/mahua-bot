@@ -113,7 +113,17 @@ func main() {
 	exercisesMeta := session.DB("").C("exercisesMeta")
 	groups := session.DB("").C("groups")
 
-	register(&dispatcher, massages, subscribers, publications, exercises, exercisesMeta)
+	collections := map[string]*mgo.Collection{
+		"users":         users,
+		"massages":      massages,
+		"subscribers":   subscribers,
+		"publications":  publications,
+		"exercises":     exercises,
+		"exercisesMeta": exercisesMeta,
+		"groups":        groups,
+	}
+
+	register(&dispatcher, collections)
 
 	fs := http.FileServer(http.Dir("statics"))
 	fsContent := http.FileServer(http.Dir("contents"))

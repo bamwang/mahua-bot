@@ -20,7 +20,10 @@ var moyu = os.Getenv("MOYU_ID")
 var laosiji = os.Getenv("LAOSIJI_ID")
 var address = os.Getenv("LAOSIJI_ADD")
 
-func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribers, publications, exercises, exercisesMeta *mgo.Collection) {
+func register(dispatcher *actionDispatcher.ActionDispatcher, collections map[string]*mgo.Collection) {
+
+	subscribers, publications, exercises, exercisesMeta, groups :=
+		collections["subscribers"], collections["publications"], collections["exercises"], collections["exercisesMeta"], collections["groups"]
 
 	// f23
 	f23MenuHandler := func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
@@ -455,25 +458,32 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 				if strings.HasPrefix(message.Text, "@all") || strings.HasPrefix(message.Text, "@here") || strings.HasPrefix(message.Text, "@所有人") {
 					replacer := strings.NewReplacer("@all", "", "@here", "", "@所有人", "")
 					message.Text = replacer.Replace(message.Text)
-					var userIDs []string
-					if event.Source.Type == linebot.EventSourceTypeRoom {
-						res, _err := bot.GetRoomMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
-						if _err != nil {
-							err = _err
-							return
-						}
-						userIDs = res.MemberIDs
+					// if event.Source.Type == linebot.EventSourceTypeRoom {
+					// 	res, _err := bot.GetRoomMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
+					// 	if _err != nil {
+					// 		err = _err
+					// 		return
+					// 	}
+					// 	userIDs = res.MemberIDs
+					// }
+					// if event.Source.Type == linebot.EventSourceTypeGroup {
+					// 	res, _err := bot.GetGroupMemberIDs(event.Source.GroupID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
+					// 	if _err != nil {
+					// 		err = _err
+					// 		return
+					// 	}
+					// 	userIDs = res.MemberIDs
+					// }
+					var group Group
+					err := groups.FindId(actionDispatcher.ExtractTargetID(event)).One(&group)
+					if err != nil {
+						return nil, err
 					}
-					if event.Source.Type == linebot.EventSourceTypeGroup {
-						res, _err := bot.GetGroupMemberIDs(event.Source.GroupID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
-						if _err != nil {
-							err = _err
-							return
-						}
-						userIDs = res.MemberIDs
+					ids := make([]string, 0, len(group.Users))
+					for id := range group.Users {
+						ids = append(ids, id)
 					}
-
-					sendTo(userIDs, message.Text)
+					sendTo(ids, message.Text)
 				}
 			}
 		}
