@@ -475,13 +475,17 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, collections map[str
 					// 	userIDs = res.MemberIDs
 					// }
 					var group Group
-					err := groups.FindId(actionDispatcher.ExtractTargetID(event)).One(&group)
+					groupID := actionDispatcher.ExtractTargetID(event)
+					err := groups.FindId(groupID).One(&group)
 					if err != nil {
 						return nil, err
 					}
 					ids := make([]string, 0, len(group.Users))
 					for id := range group.Users {
 						ids = append(ids, id)
+					}
+					if groupID == moyu {
+						message.Text = "来自摸鱼的消息：\n" + message.Text
 					}
 					sendTo(ids, message.Text)
 				}
