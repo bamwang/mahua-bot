@@ -458,19 +458,19 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 					var userIDs []string
 					if event.Source.Type == linebot.EventSourceTypeRoom {
 						res, _err := bot.GetRoomMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
-						userIDs = res.MemberIDs
 						if err != nil {
 							err = _err
 							return
 						}
+						userIDs = res.MemberIDs
 					}
 					if event.Source.Type == linebot.EventSourceTypeGroup {
 						res, _err := bot.GetGroupMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
-						userIDs = res.MemberIDs
 						if err != nil {
 							err = _err
 							return
 						}
+						userIDs = res.MemberIDs
 					}
 
 					sendTo(userIDs, message.Text)
