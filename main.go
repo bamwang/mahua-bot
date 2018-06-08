@@ -281,7 +281,7 @@ func main() {
 				group.Users[event.Source.UserID] = true
 				group.Type = event.Source.Type
 				group.ID = groupID
-				err := groups.UpsertId(groupID, group)
+				_, err := groups.UpsertId(groupID, group)
 				if err != nil {
 					log.Println(err.Error())
 				}
