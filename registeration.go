@@ -457,7 +457,6 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 					replacer := strings.NewReplacer("@all", "", "@here", "", "@所有人", "")
 					message.Text = replacer.Replace(message.Text)
 					var userIDs []string
-					var groupOrRoomName string
 					if event.Source.Type == linebot.EventSourceTypeRoom {
 						res, _ := bot.GetRoomMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
 						userIDs = res.MemberIDs

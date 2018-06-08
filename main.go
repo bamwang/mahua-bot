@@ -260,7 +260,7 @@ func main() {
 		for _, event := range events {
 			b, _ := json.Marshal(event)
 			log.Println("REQ: " + string(b))
-			dispatcher.Dispatch(&event)
+			dispatcher.Dispatch(event)
 		}
 	})
 

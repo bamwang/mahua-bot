@@ -124,7 +124,7 @@ func (l List) Less(i, j int) bool {
 func (e *exercisesManager) check(flag, prefix string) (message string, err error) {
 	var start time.Time
 	var title string
-	now.FirstDayMonday = true
+	now.WeekStartDay = time.Monday
 	switch flag {
 	case "w":
 		title = "本周统计"
