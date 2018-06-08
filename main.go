@@ -281,7 +281,10 @@ func main() {
 				group.Users[event.Source.UserID] = true
 				group.Type = event.Source.Type
 				group.ID = groupID
-				groups.UpdateId(groupID, group)
+				err := groups.UpdateId(groupID, group)
+				if err != nil {
+					log.Println(err.Error())
+				}
 			}
 			dispatcher.Dispatch(event)
 		}
