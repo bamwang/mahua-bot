@@ -1,8 +1,8 @@
 hash: b75ec5c8832a01488807f79ae59ec6aa0a6ebe8c6fa6f285167f27aa6ba4765d
-updated: 2018-01-17T12:42:15.834702+09:00
+updated: 2018-06-08T17:23:51.651291+09:00
 imports:
 - name: github.com/aws/aws-sdk-go
-  version: fe3adbda9bc845e750e3e5767c0a14dff202b2cc
+  version: bff41fb23b7550368282029f6478819d6a99ae0f
   subpackages:
   - aws
   - aws/awserr
@@ -20,6 +20,7 @@ imports:
   - aws/request
   - aws/session
   - aws/signer/v4
+  - internal/sdkrand
   - internal/shareddefaults
   - private/protocol
   - private/protocol/query
@@ -34,11 +35,11 @@ imports:
 - name: github.com/go-ini/ini
   version: 32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a
 - name: github.com/jinzhu/now
-  version: d939ba741945c047cac69c329c5fb0d6b4a06520
+  version: ed742868f2aebdb1c0c437bf4f7257f88834b66f
 - name: github.com/jmespath/go-jmespath
   version: dd801d4f4ce7ac746e7e7b4489d2fa600b3b096b
 - name: github.com/line/line-bot-sdk-go
-  version: 3a7d66f5efce6ac202f650134609f9d6d163a640
+  version: 424c05552d2c288cf4c127e96b3a40000f7520fc
   subpackages:
   - linebot
 - name: github.com/nfnt/resize

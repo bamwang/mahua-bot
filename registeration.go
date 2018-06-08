@@ -446,12 +446,28 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, massages, subscribe
 			messages = forwardToTuling(event, messages)
 		default:
 			if message, ok := event.Message.(*linebot.TextMessage); ok {
-				if !(strings.HasPrefix(message.Text, "@mahua") || strings.HasPrefix(message.Text, "@mh") || strings.HasPrefix(message.Text, "@麻花")) {
+				if strings.HasPrefix(message.Text, "@mahua") || strings.HasPrefix(message.Text, "@mh") || strings.HasPrefix(message.Text, "@麻花") {
+					replacer := strings.NewReplacer("@mh", "", "@mahua", "", "@麻花", "")
+					message.Text = replacer.Replace(message.Text)
+					messages = forwardToTuling(event, messages)
 					return
 				}
-				replacer := strings.NewReplacer("@mh", "", "@mahua", "", "@麻花", "")
-				message.Text = replacer.Replace(message.Text)
-				messages = forwardToTuling(event, messages)
+
+				if strings.HasPrefix(message.Text, "@all") || strings.HasPrefix(message.Text, "@here") || strings.HasPrefix(message.Text, "@所有人") {
+					replacer := strings.NewReplacer("@all", "", "@here", "", "@所有人", "")
+					message.Text = replacer.Replace(message.Text)
+					var userIDs []string
+					var groupOrRoomName string
+					if event.Source.Type == linebot.EventSourceTypeRoom {
+						res, _ := bot.GetRoomMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
+						userIDs = res.MemberIDs
+					}
+					if event.Source.Type == linebot.EventSourceTypeGroup {
+						res, _ := bot.GetGroupMemberIDs(event.Source.RoomID, os.Getenv("CHANNEL_ACCSESS_TOKEN")).Do()
+						userIDs = res.MemberIDs
+					}
+					sendTo(userIDs, message.Text)
+				}
 			}
 		}
 		return
