@@ -1,7 +1,6 @@
 hash: b75ec5c8832a01488807f79ae59ec6aa0a6ebe8c6fa6f285167f27aa6ba4765d
 updated: 2018-06-08T17:23:51.651291+09:00
 imports:
-- name: github.com/aws/aws-sdk-go
   version: bff41fb23b7550368282029f6478819d6a99ae0f
   subpackages:
   - aws
