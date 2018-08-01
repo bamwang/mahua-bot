@@ -1,0 +1,54 @@
+hash: 297662542fa79ca8693d55c7cc2a104282c1793d5205bb3782e21e93b99de46d
+updated: 2018-08-01T14:24:04.454512+09:00
+imports:
+- name: github.com/go-ini/ini
+  version: d58d458bec3cb5adec4b7ddb41131855eac0b33f
+- name: github.com/jinzhu/now
+  version: ed742868f2aebdb1c0c437bf4f7257f88834b66f
+- name: github.com/line/line-bot-sdk-go
+  version: a20a8ef13587611afb3b8d70c9a6d916aa30d882
+  subpackages:
+  - linebot
+- name: github.com/minio/minio-go
+  version: 70799fe8dae6ecfb6c7d7e9e048fce27f23a1992
+  subpackages:
+  - pkg/credentials
+  - pkg/encrypt
+  - pkg/s3signer
+  - pkg/s3utils
+  - pkg/set
+- name: github.com/mitchellh/go-homedir
+  version: 3864e76763d94a6df2f9960b16a20a33da9f9a66
+- name: github.com/nfnt/resize
+  version: 83c6a9932646f83e3267f353373d47347b6036b2
+- name: golang.org/x/crypto
+  version: c126467f60eb25f8f27e5a981f32a87e3965053f
+  subpackages:
+  - argon2
+  - blake2b
+- name: golang.org/x/net
+  version: 49c15d80dfbc983ea25246ee959d970efe09ec09
+  subpackages:
+  - context
+  - context/ctxhttp
+  - http/httpguts
+  - idna
+- name: golang.org/x/sys
+  version: bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e
+  subpackages:
+  - cpu
+- name: golang.org/x/text
+  version: 0605a8320aceb4207a5fb3521281e17ec2075476
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+- name: gopkg.in/mgo.v2
+  version: 9856a29383ce1c59f308dd1cf0363a79b5bef6b5
+  subpackages:
+  - bson
+  - internal/json
+  - internal/sasl
+  - internal/scram
+testImports: []

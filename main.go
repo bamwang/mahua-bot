@@ -274,11 +274,12 @@ func main() {
 			}
 			return
 		}
-		for _, event := range events {
+		for _, _event := range events {
+			event := _event
 			b, _ := json.Marshal(event)
 			log.Println("REQ: " + string(b))
 			var group Group
-			groupID := actionDispatcher.ExtractTargetID(event)
+			groupID := actionDispatcher.ExtractTargetID(&event)
 			err := groups.FindId(groupID).One(&group)
 			if err == mgo.ErrNotFound {
 				group = Group{
@@ -296,7 +297,7 @@ func main() {
 					log.Println(err.Error())
 				}
 			}
-			dispatcher.Dispatch(event)
+			dispatcher.Dispatch(&event)
 		}
 	})
 
