@@ -1,50 +1,52 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	minio "github.com/minio/minio-go"
 )
 
 var (
-	sess            *session.Session
-	bucket          = aws.String(os.Getenv("AWS_BUCKET"))
-	bucketURLPrefix = "https://" + os.Getenv("AWS_BUCKET") + ".s3.amazonaws.com/"
+	bucketURLBase   = os.Getenv("AWS_BUCKET_URL_BASE")
+	endpoint        = os.Getenv("AWS_ENDPOINT")
+	accessKeyID     = os.Getenv("AWS_ACCESS_KEY_ID")
+	secretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
+	bucket          = os.Getenv("AWS_BUCKET")
+	client          *minio.Client
 )
 
 func initS3() {
-	sess = session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
+	_client, err := minio.NewV2(endpoint, accessKeyID, secretAccessKey, true)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	client = _client
 }
 
 func loadMahua() (mahuas []string) {
-	svc := s3.New(sess)
-	resp, err := svc.ListObjects(&s3.ListObjectsInput{Bucket: bucket})
+	// Create a done channel to control 'ListObjects' go routine.
+	doneCh := make(chan struct{})
 
-	if err != nil {
-		log.Printf("Unable to list buckets, %v", err)
-	}
-	for _, item := range resp.Contents {
-		if keys := strings.Split(*item.Key, "/"); len(keys) == 2 && keys[0] == "mahua" && !strings.HasSuffix(keys[1], "_thumbnail.jpg") {
-			mahuas = append(mahuas, *item.Key)
+	// Indicate to our routine to exit cleanly upon return.
+	defer close(doneCh)
+	for item := range client.ListObjects(bucket, "", true, doneCh) {
+		if item.Err != nil {
+			fmt.Println(item.Err)
+			return
+		}
+		if !strings.HasSuffix(item.Key, "_thumbnail.jpg") {
+			mahuas = append(mahuas, item.Key)
 		}
 	}
 	log.Printf("%d mahua pics loaded\n", len(mahuas))
-	return mahuas
+	return
 }
 
-func upload(filename, localDIR, s3DIR string, tmp bool) (string, error) {
-	file, err := os.Open(localDIR + "/" + filename)
-
-	if err != nil {
-		return "", err
-	}
+func upload(filename, localDIR string, tmp bool) (string, error) {
+	filePath := localDIR + "/" + filename
 
 	defer func() {
 		if tmp {
@@ -54,15 +56,8 @@ func upload(filename, localDIR, s3DIR string, tmp bool) (string, error) {
 			}
 		}
 	}()
-	defer file.Close()
 
-	uploader := s3manager.NewUploader(sess)
-	res, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket:      bucket,
-		ContentType: aws.String("image/jpeg"),
-		ACL:         aws.String("public-read"),
-		Key:         aws.String(s3DIR + "/" + filename),
-		Body:        file,
-	})
-	return res.Location, err
+	_, err := client.FPutObject(bucket, filename, filePath, minio.PutObjectOptions{ContentType: "image/jpeg", UserMetadata: map[string]string{"x-amz-acl": "public-read"}})
+
+	return "", err
 }

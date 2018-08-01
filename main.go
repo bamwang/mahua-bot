@@ -323,7 +323,7 @@ func publish(w http.ResponseWriter, req *http.Request, publications *mgo.Collect
 	publications.Find(nil).Sort("-_id").One(&pub)
 	messages := []linebot.Message{linebot.NewTextMessage(message)}
 	for _, id := range pub.IDs {
-		messages = append(messages, linebot.NewImageMessage(bucketURLPrefix+"mahua/"+id+".jpg", bucketURLPrefix+"mahua/"+id+"_thumbnail.jpg"))
+		messages = append(messages, linebot.NewImageMessage(bucketURLBase+id+".jpg", bucketURLBase+id+"_thumbnail.jpg"))
 	}
 	if pub.PublishedAt.Year() >= 2017 {
 		w.WriteHeader(404)
@@ -394,10 +394,10 @@ func fetchAndUploadContent(messageID string, dir string) (string, string, error)
 	if err != nil {
 		return "", "", err
 	}
-	url, err := upload(messageID+".jpg", "/tmp/", dir, true)
+	url, err := upload(messageID+".jpg", "/tmp/", true)
 	if err != nil {
 		return "", "", err
 	}
-	thumbnailURL, err := upload(messageID+"_thumbnail.jpg", "/tmp/", dir, true)
+	thumbnailURL, err := upload(messageID+"_thumbnail.jpg", "/tmp/", true)
 	return url, thumbnailURL, err
 }

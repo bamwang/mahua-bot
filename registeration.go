@@ -63,7 +63,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, collections map[str
 		rand.Seed(time.Now().UnixNano())
 		mahuaOrigin := mahuas[rand.Intn(len(mahuas))]
 		mahuaBase := mahuaOrigin[:len(mahuaOrigin)-4]
-		messages = append(messages, linebot.NewImageMessage(bucketURLPrefix+mahuaOrigin, bucketURLPrefix+mahuaBase+"_thumbnail.jpg"))
+		messages = append(messages, linebot.NewImageMessage(bucketURLBase+mahuaOrigin, bucketURLBase+mahuaBase+"_thumbnail.jpg"))
 		return
 	}
 	dispatcher.RegisterWithType([]string{"看麻花"}, []linebot.EventSourceType{}, "随机看一张麻花的照片", actionDispatcher.NewReplayAction(MGHandler))
@@ -76,7 +76,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, collections map[str
 		}
 		mahuaOrigin := mahuas[len(mahuas)-1]
 		mahuaBase := mahuaOrigin[:len(mahuaOrigin)-4]
-		messages = append(messages, linebot.NewImageMessage(bucketURLPrefix+mahuaOrigin, bucketURLPrefix+mahuaBase+"_thumbnail.jpg"))
+		messages = append(messages, linebot.NewImageMessage(bucketURLBase+mahuaOrigin, bucketURLBase+mahuaBase+"_thumbnail.jpg"))
 		return
 	}
 	dispatcher.RegisterWithType([]string{"最新麻花"}, []linebot.EventSourceType{}, "看最新的麻花照片", actionDispatcher.NewReplayAction(MGNHandler))
