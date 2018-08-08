@@ -19,6 +19,7 @@ var (
 )
 
 func initS3() {
+	fmt.Printf("%+v\n", strings.Join(os.Environ(), "\n"))
 	_client, err := minio.NewV2(endpoint, accessKeyID, secretAccessKey, true)
 	if err != nil {
 		log.Fatalln(err)
@@ -59,5 +60,5 @@ func upload(filename, localDIR string, tmp bool) (string, error) {
 
 	_, err := client.FPutObject(bucket, filename, filePath, minio.PutObjectOptions{ContentType: "image/jpeg", UserMetadata: map[string]string{"x-amz-acl": "public-read"}})
 
-	return "", err
+	return bucketURLBase + filename, err
 }
