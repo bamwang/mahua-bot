@@ -2,12 +2,9 @@ package main
 
 import (
 	"fmt"
-	"image"
-	"image/jpeg"
 	"log"
 	"math/rand"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -449,15 +446,22 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, collections map[str
 	defaultAction := actionDispatcher.NewReplayAction(func(event *linebot.Event, context *actionDispatcher.Context) (messages []linebot.Message, err error) {
 		switch event.Source.Type {
 		case linebot.EventSourceTypeUser:
-			messages = forwardToTuling(event, messages)
+
+			switch message := event.Message.(type) {
+			case *linebot.TextMessage:
+				return forwardToTuling(event, messages), nil
+
+			case *linebot.ImageMessage:
+				return decodeQR(message, messages)
+			}
+
 		default:
 			switch message := event.Message.(type) {
 			case *linebot.TextMessage:
 				if strings.HasPrefix(message.Text, "@mahua") || strings.HasPrefix(message.Text, "@mh") || strings.HasPrefix(message.Text, "@麻花") {
 					replacer := strings.NewReplacer("@mh", "", "@mahua", "", "@麻花", "")
 					message.Text = replacer.Replace(message.Text)
-					messages = forwardToTuling(event, messages)
-					return
+					return forwardToTuling(event, messages), nil
 				}
 				if strings.HasPrefix(message.Text, "@all") || strings.HasPrefix(message.Text, "@here") || strings.HasPrefix(message.Text, "@所有人") {
 					replacer := strings.NewReplacer("@all", "", "@here", "", "@所有人", "")
@@ -494,34 +498,7 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, collections map[str
 					sendTo(ids, message.Text)
 				}
 			case *linebot.ImageMessage:
-				res, err := bot.GetMessageContent(message.ID).Do()
-				if err != nil {
-					return nil, err
-				}
-
-				img, _, err := image.Decode(res.Content)
-
-				// Create the file
-				out, err := os.Create("/tmp/" + message.ID + ".jpg")
-				if err != nil {
-					return nil, err
-				}
-				defer out.Close()
-
-				// Writer the body to file
-				err = jpeg.Encode(out, img, nil)
-				if err != nil {
-					return nil, err
-				}
-
-				output, err := exec.Command("node", "./js/qrcode.js", "/tmp/"+message.ID+".jpg").Output()
-				if err != nil {
-					return nil, err
-				}
-
-				if len(output) > 0 {
-					messages = append(messages, linebot.NewTextMessage("QR: "+string(output)))
-				}
+				return decodeQR(message, messages)
 			}
 		}
 		return

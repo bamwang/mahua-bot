@@ -28,7 +28,7 @@ fs.readFile(process.argv[2], function(err, file) {
             }
         });
     } catch(e) {
-        
+        console.error(e);
     }
 });
             

@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 
 	mgo "gopkg.in/mgo.v2"
@@ -401,4 +402,40 @@ func fetchAndUploadContent(messageID string, dir string) (string, string, error)
 	}
 	thumbnailURL, err := upload(messageID+"_thumbnail.jpg", "/tmp/", true)
 	return url, thumbnailURL, err
+}
+
+func decodeQR(message *linebot.ImageMessage, messages []linebot.Message) ([]linebot.Message, error) {
+	path := "/tmp/" + message.ID + ".jpg"
+	res, err := bot.GetMessageContent(message.ID).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	img, _, err := image.Decode(res.Content)
+
+	// Create the file
+	out, err := os.Create(path)
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(path)
+	defer out.Close()
+
+	// Writer the body to file
+	thumbnail := resize.Resize(600, 0, img, resize.Lanczos3)
+
+	err = jpeg.Encode(out, thumbnail, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := exec.Command("node", "./js/qrcode.js", path).Output()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) > 0 {
+		messages = append(messages, linebot.NewTextMessage("QR: "+string(output)))
+	}
+	return messages, nil
 }
