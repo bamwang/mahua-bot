@@ -5,3 +5,4 @@ contents/*
 .git.pvt
 env.rc
 mahua-bot
+node_modules

@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/jpeg"
 	"log"
 	"math/rand"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -15,7 +17,6 @@ import (
 
 	"github.com/bamwang/mahua-bot/action_dispatcher"
 	"github.com/line/line-bot-sdk-go/linebot"
-	"github.com/tuotoo/qrcode"
 )
 
 var moyu = os.Getenv("MOYU_ID")
@@ -500,16 +501,27 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, collections map[str
 
 				img, _, err := image.Decode(res.Content)
 
+				// Create the file
+				out, err := os.Create("/tmp/" + message.ID + ".jpg")
+				if err != nil {
+					return nil, err
+				}
+				defer out.Close()
+
+				// Writer the body to file
+				err = jpeg.Encode(out, img, nil)
 				if err != nil {
 					return nil, err
 				}
 
-				qr, err := qrcode.DecodeImg(img)
+				output, err := exec.Command("node", "./js/qrcode.js", "/tmp/"+message.ID+".jpg").Output()
 				if err != nil {
 					return nil, err
 				}
 
-				messages = append(messages, linebot.NewTextMessage(qr.Content))
+				if len(output) > 0 {
+					messages = append(messages, linebot.NewTextMessage("QR: "+string(output)))
+				}
 			}
 		}
 		return
