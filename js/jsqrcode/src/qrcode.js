@@ -47,7 +47,7 @@ qrcode.echo = function(info){
         qrcode.height = nheight;
         qrcode.imagedata = {data:image_data};
     }catch(e){
-        console.log(e);
+        console.error(e);
         qrcode.status = 0;
         qrcode.result = "error reading Image";
     }
@@ -59,7 +59,7 @@ qrcode.echo = function(info){
         }
         catch(e)
         {
-            console.log(e);
+            console.error(e);
             qrcode.status = 0;
             qrcode.result = "error decoding QR Code";
         }
@@ -74,7 +74,7 @@ qrcode.decode = function(src,callback){
     qrcode.callback = callback;
     image(src, function(error, info) {
         if(error !== null){
-            console.log(error);
+            console.error(error);
         }
         qrcode.echo(info);
     });
@@ -94,7 +94,7 @@ qrcode.decode_url = function (s)
   }
   catch(e)
   {
-    console.log(e);
+    console.error(e);
     escaped = s;
   }
   var ret = "";
@@ -103,7 +103,7 @@ qrcode.decode_url = function (s)
   }
   catch(e)
   {
-    console.log(e);
+    console.error(e);
     ret = escaped;
   }
   return ret;
@@ -169,7 +169,7 @@ qrcode.process = function(){
     
     var end = new Date().getTime();
     var time = end - start;
-    // console.log("Decoding succeed! Total time (ms): "+ time);
+    // console.error("Decoding succeed! Total time (ms): "+ time);
     return qrcode.decode_utf8(str);
     //alert("Time:" + time + " Code: "+str);
 }
