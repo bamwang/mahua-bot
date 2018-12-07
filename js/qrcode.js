@@ -23,7 +23,7 @@ QRCodeDataBlockReader = require("./jsqrcode/src/databr.js");
 fs.readFile(process.argv[2], function(err, file) {
     try{
         qrcode.decode(file, function(status,result){
-            if(result !== null){
+            if(result){
                 console.log(result);
             }
         });
