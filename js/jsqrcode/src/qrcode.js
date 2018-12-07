@@ -49,7 +49,7 @@ qrcode.echo = function(info){
     }catch(e){
         console.error(e);
         qrcode.status = 0;
-        qrcode.result = "error reading Image";
+        qrcode.result = "";
     }
 
     if(qrcode.result === null){
@@ -61,7 +61,7 @@ qrcode.echo = function(info){
         {
             console.error(e);
             qrcode.status = 0;
-            qrcode.result = "error decoding QR Code";
+            qrcode.result = "";
         }
     }
 
