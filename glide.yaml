@@ -11,3 +11,5 @@ import:
 - package: gopkg.in/mgo.v2
   subpackages:
   - bson
+- package: github.com/tuotoo/qrcode
+- package: github.com/maruel/rs

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"log"
 	"math/rand"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/bamwang/mahua-bot/action_dispatcher"
 	"github.com/line/line-bot-sdk-go/linebot"
+	"github.com/tuotoo/qrcode"
 )
 
 var moyu = os.Getenv("MOYU_ID")
@@ -448,7 +450,8 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, collections map[str
 		case linebot.EventSourceTypeUser:
 			messages = forwardToTuling(event, messages)
 		default:
-			if message, ok := event.Message.(*linebot.TextMessage); ok {
+			switch message := event.Message.(type) {
+			case *linebot.TextMessage:
 				if strings.HasPrefix(message.Text, "@mahua") || strings.HasPrefix(message.Text, "@mh") || strings.HasPrefix(message.Text, "@麻花") {
 					replacer := strings.NewReplacer("@mh", "", "@mahua", "", "@麻花", "")
 					message.Text = replacer.Replace(message.Text)
@@ -489,6 +492,24 @@ func register(dispatcher *actionDispatcher.ActionDispatcher, collections map[str
 					}
 					sendTo(ids, message.Text)
 				}
+			case *linebot.ImageMessage:
+				res, err := bot.GetMessageContent(message.ID).Do()
+				if err != nil {
+					return nil, err
+				}
+
+				img, _, err := image.Decode(res.Content)
+
+				if err != nil {
+					return nil, err
+				}
+
+				qr, err := qrcode.DecodeImg(img)
+				if err != nil {
+					return nil, err
+				}
+
+				messages = append(messages, linebot.NewTextMessage(qr.Content))
 			}
 		}
 		return
